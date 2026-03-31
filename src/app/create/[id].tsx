@@ -29,8 +29,12 @@ export default function CustomizeScreen() {
   }, [id]);
 
   const handleSaveToGallery = async () => {
+    if (saving) return;
     try {
       setSaving(true);
+      // Wait for React to process setSaving before showing permissions or capturing
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -39,6 +43,9 @@ export default function CustomizeScreen() {
         );
         return;
       }
+
+      // Small delay to ensure any layout from permissions dialogue has settled
+      // await new Promise((resolve) => setTimeout(resolve, 100));
 
       const uri = await viewShotRef.current?.capture?.();
       if (uri) {

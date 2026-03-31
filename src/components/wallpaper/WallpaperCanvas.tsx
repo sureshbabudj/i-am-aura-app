@@ -106,9 +106,9 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
         const mergedPatternConfig = {
           ...patternConfig,
           type: activePatternType,
-          color: currentWallpaper.textColor || '#30312e',
-          opacity: 0.2, // increased opacity for better visibility
-          scale: 1,
+          color: patternConfig?.color || currentWallpaper.textColor || '#30312e',
+          opacity: patternConfig?.opacity ?? 0.2,
+          scale: patternConfig?.scale ?? 1,
         };
         return (
           <View style={StyleSheet.absoluteFill}>
