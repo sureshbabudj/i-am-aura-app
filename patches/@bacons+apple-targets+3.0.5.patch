@@ -1,0 +1,18 @@
+diff --git a/node_modules/@bacons/apple-targets/build/with-xcode-changes.js b/node_modules/@bacons/apple-targets/build/with-xcode-changes.js
+index b00cbce..cbffb81 100644
+--- a/node_modules/@bacons/apple-targets/build/with-xcode-changes.js
++++ b/node_modules/@bacons/apple-targets/build/with-xcode-changes.js
+@@ -197,7 +197,12 @@ async function applyXcodeChanges(config, project, props) {
+         // If the target already exists, we should update it instead of creating a new one
+         if (existingTarget) {
+             // Remove the old target before creating a new one
+-            existingTarget.removeFromProject();
++            try {
++                existingTarget.removeFromProject();
++            } catch (e) {
++                // Target might already be removed or have different structure
++                console.warn(`[expo-targets] Could not remove existing target: ${e.message}`);
++            }
+         }
+         
+         const target = project.addTarget(
