@@ -1,9 +1,11 @@
-import { Tabs } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Tabs, Redirect } from 'expo-router';
 import { Sparkles, Palette, Award, Settings } from 'lucide-react-native';
 import { View, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { colors } from '@/src/constants/colors';
+import { useAppStore } from '@/src/stores/appStore';
 
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   return (
@@ -54,6 +56,27 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 }
 
 export default function TabsLayout() {
+  const { hasSeenOnboarding } = useAppStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    // Check if Zustand store has hydrated storage yet
+    const unsub = useAppStore.persist.onFinishHydration(() => setIsHydrated(true));
+    setIsHydrated(useAppStore.persist.hasHydrated());
+    
+    return () => {
+      unsub();
+    };
+  }, []);
+
+  if (!isHydrated) {
+    return null; // Wait for hydration to determine routing correctly
+  }
+
+  if (!hasSeenOnboarding) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" />

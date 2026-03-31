@@ -5,6 +5,7 @@ import { Palette, Share, Heart, ChevronRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppStore } from '@/src/stores/appStore';
 
 const STEPS = [
   {
@@ -34,13 +35,20 @@ export default function OnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { completeOnboarding } = useAppStore();
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      completeOnboarding();
       router.replace('/(tabs)');
     }
+  };
+
+  const handleSkip = () => {
+    completeOnboarding();
+    router.replace('/(tabs)');
   };
 
   const step = STEPS[currentStep];
@@ -54,7 +62,7 @@ export default function OnboardingScreen() {
         style={{ paddingTop: insets.top + 16 }}
         className="absolute top-0 z-20 w-full flex-row justify-end px-8">
         <Pressable
-          onPress={() => router.replace('/(tabs)')}
+          onPress={handleSkip}
           className="px-4 py-2 active:opacity-70">
           <Text className="font-manrope text-xs uppercase tracking-[0.2em] text-on-surface/60">
             Skip
