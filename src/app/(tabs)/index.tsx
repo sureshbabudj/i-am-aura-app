@@ -6,80 +6,95 @@ import {
   User,
   Heart,
   Share2,
-  Zap,
-  Sun,
-  CloudRain,
+  Clover,
+  HandFist,
   HeartHandshake,
   Focus,
+  BicepsFlexed,
 } from 'lucide-react-native';
-
 import { MoodId } from '@/src/constants/moods';
 import { useMoodStore } from '@/src/stores/moodStore';
-
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const ORGANIC_1 = {
-  borderTopLeftRadius: 60,
-  borderTopRightRadius: 40,
-  borderBottomRightRadius: 30,
-  borderBottomLeftRadius: 70,
-};
-
-const ORGANIC_2 = {
-  borderTopLeftRadius: 30,
-  borderTopRightRadius: 70,
-  borderBottomRightRadius: 70,
-  borderBottomLeftRadius: 30,
-};
+import { colors } from '@/src/constants/colors';
 
 const MOOD_UI = [
   {
     id: 'motivational',
-    label: 'motivational',
-    icon: Zap,
-    bg: 'bg-[#a4644e]/10',
-    color: '#a4644e',
-    shape: ORGANIC_1,
+    label: 'Motivational',
+    icon: BicepsFlexed,
+    bg: 'bg-primary-container/10',
+    color: colors['primary-container'],
+    shape: {
+      borderTopLeftRadius: 90,
+      borderTopRightRadius: 80,
+      borderBottomRightRadius: 90,
+      borderBottomLeftRadius: 60,
+    },
   },
   {
     id: 'romantic',
-    label: 'romantic',
+    label: 'Romantic',
     icon: Heart,
-    bg: 'bg-[#d5e8d1]/20',
-    color: '#526351',
-    shape: ORGANIC_2,
+    bg: 'bg-on-error-container/10',
+    color: colors['on-error-container'],
+    shape: {
+      borderTopLeftRadius: 80,
+      borderTopRightRadius: 90,
+      borderBottomRightRadius: 70,
+      borderBottomLeftRadius: 70,
+    },
   },
   {
     id: 'peaceful',
-    label: 'happy',
-    icon: Sun,
-    bg: 'bg-[#f0e0cc]/30',
-    color: '#655a4b',
-    shape: { borderRadius: 48 },
+    label: 'Peaceful',
+    icon: Clover,
+    bg: 'bg-tertiary-container/15',
+    color: colors['tertiary-container'],
+    shape: {
+      borderTopLeftRadius: 80,
+      borderTopRightRadius: 90,
+      borderBottomRightRadius: 70,
+      borderBottomLeftRadius: 70,
+    },
   },
   {
     id: 'confident',
-    label: 'sad',
-    icon: CloudRain,
-    bg: 'bg-[#f0eee9]',
-    color: '#53433e',
-    shape: ORGANIC_1,
+    label: 'Confident',
+    icon: HandFist,
+    bg: 'bg-surface-container',
+    color: colors['surface-tint'],
+    shape: {
+      borderTopLeftRadius: 90,
+      borderTopRightRadius: 85,
+      borderBottomRightRadius: 90,
+      borderBottomLeftRadius: 60,
+    },
   },
   {
     id: 'grateful',
     label: 'empathy',
     icon: HeartHandshake,
-    bg: 'bg-[#ffdbcf]/20',
-    color: '#874c37',
-    shape: ORGANIC_2,
+    bg: 'bg-primary-container/20',
+    color: colors['primary-container'],
+    shape: {
+      borderTopLeftRadius: 80,
+      borderTopRightRadius: 95,
+      borderBottomRightRadius: 70,
+      borderBottomLeftRadius: 85,
+    },
   },
   {
     id: 'focused',
     label: 'focused',
     icon: Focus,
-    bg: 'bg-[#d5e8d1]/20',
-    color: '#526351',
-    shape: { borderRadius: 64 },
+    bg: 'bg-secondary/20',
+    color: colors['secondary'],
+    shape: {
+      borderTopLeftRadius: 70,
+      borderTopRightRadius: 90,
+      borderBottomRightRadius: 90,
+      borderBottomLeftRadius: 90,
+    },
   },
 ];
 
