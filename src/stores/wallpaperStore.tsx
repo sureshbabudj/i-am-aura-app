@@ -84,7 +84,7 @@ interface WallpaperState {
   addRecentGradient: (gradient: string[]) => void;
 }
 
-const DEFAULT_WALLPAPER: Partial<Wallpaper> = {
+export const DEFAULT_WALLPAPER: Partial<Wallpaper> = {
   backgroundType: 'gradient',
   backgroundValue: ['#FF6B35', '#F7931E'],
   imageOpacity: 1,
@@ -94,7 +94,12 @@ const DEFAULT_WALLPAPER: Partial<Wallpaper> = {
   textAlignment: { vertical: 'center', horizontal: 'center' },
   textOpacity: 1,
   fontFamily: 'NotoSerif-Bold',
-  patternConfig: undefined,
+  patternConfig: {
+    type: 'none',
+    opacity: 0.2,
+    scale: 1,
+    color: '#000000',
+  },
   textContent: '',
 };
 

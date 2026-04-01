@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useWallpaperStore } from '@/src/stores/wallpaperStore';
+import { useWallpaperStore, DEFAULT_WALLPAPER } from '@/src/stores/wallpaperStore';
 
 import { MOOD_IMAGES } from '@/src/constants/images';
 import { Image } from 'expo-image';
@@ -50,8 +50,10 @@ const MemoizedPattern = React.memo(({ xml }: { xml: string }) => (
   <SvgXml xml={xml} width="100%" height="100%" pointerEvents="none" />
 ));
 
+const DEFAULT_GRADIENT = ['#FF6B35', '#F7931E'];
+
 const PREDEFINED_GRADIENTS = [
-  ['#FF6B35', '#F7931E'],
+  DEFAULT_GRADIENT,
   ['#FF3366', '#FF9933'],
   ['#00C9FF', '#92FE9D'],
   ['#ef32d9', '#89fffd'],
@@ -82,16 +84,17 @@ const StyleThumb = ({
     .replace(/^\w/, (c) => c.toUpperCase());
 
   return (
-    <Pressable
-      onPress={onPress}
-      className={`flex flex-col items-center justify-center rounded-xl border p-4 transition-transform active:scale-95 ${
-        isFullWidth ? 'mb-3 w-full' : 'w-28 shrink-0'
-      } ${
+    <View
+      pointerEvents="none"
+      className={`flex flex-col items-center justify-center rounded-xl border p-4 ${
+        isFullWidth ? 'mb-3 w-full' : 'w-28'
+      } ${isSelected ? 'border-2 border-primary' : 'border border-outline-variant'}`}
+      style={[
+        !isFullWidth ? { aspectRatio: 1 } : {},
         isSelected
-          ? 'border-2 border-primary bg-primary/5'
-          : 'border-1 border-outline-variant/30 bg-surface-container-lowest'
-      }`}
-      style={!isFullWidth ? { aspectRatio: 1 } : {}}>
+          ? { backgroundColor: 'rgba(135, 76, 55, 0.05)' }
+          : { backgroundColor: '#ffffff' },
+      ]}>
       <Text
         numberOfLines={2}
         className={`text-center font-manrope font-bold ${isFullWidth ? 'text-lg' : 'text-[14px]'} ${
@@ -106,7 +109,7 @@ const StyleThumb = ({
         }`}>
         {displayLabel}
       </Text>
-    </Pressable>
+    </View>
   );
 };
 
@@ -147,13 +150,14 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
     } else if (colorPickerTarget === 'text') {
       updateWallpaper({ textColor: hex });
     } else if (colorPickerTarget === 'pattern') {
-      updateWallpaper({ patternConfig: { ...currentWallpaper.patternConfig!, color: hex } });
+      const currentPattern = currentWallpaper.patternConfig || DEFAULT_WALLPAPER.patternConfig!;
+      updateWallpaper({ patternConfig: { ...currentPattern, color: hex } });
     } else if (colorPickerTarget === 'gradient0' || colorPickerTarget === 'gradient1') {
       let currentGrad =
         currentWallpaper.backgroundType === 'gradient' &&
         Array.isArray(currentWallpaper.backgroundValue)
           ? currentWallpaper.backgroundValue
-          : ['#FF6B35', '#F7931E'];
+          : DEFAULT_GRADIENT;
 
       const newGrad = [...currentGrad];
       if (colorPickerTarget === 'gradient0') newGrad[0] = hex;
@@ -177,8 +181,8 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
     <Pressable
       onPress={onPress}
       style={{ backgroundColor: color }}
-      className={`h-10 w-10 shrink-0 rounded-full border transition-transform active:scale-90 ${
-        isSelected ? 'border-2 border-primary' : 'border-1 border-outline-variant/50'
+      className={`h-10 w-10 shrink-0 rounded-full border ${
+        isSelected ? 'border-2 border-primary' : 'border border-outline-variant'
       }`}
     />
   );
@@ -191,26 +195,40 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
       </View>
 
       {/* Tabs Navigation */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, gap: 24 }}
-        className="flex-row py-2">
-        {(['color', 'image', 'pattern', 'gradient', 'text', 'style'] as Tab[]).map((tab) => (
-          <Pressable
-            key={tab}
-            onPress={() => setActiveTab(tab)}
-            className="group flex-col items-center gap-1">
-            <Text
-              className={`font-manrope text-[11px] font-bold uppercase tracking-widest ${activeTab === tab ? 'text-primary' : 'text-on-surface-variant/40'}`}>
-              {tab}
-            </Text>
-            <View
-              className={`h-1 rounded-full transition-all ${activeTab === tab ? 'w-6 bg-primary' : 'w-0'}`}
-            />
-          </Pressable>
-        ))}
-      </ScrollView>
+      <View className="border-b border-outline-variant/10">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingVertical: 12 }}
+          className="flex-row">
+          {(['color', 'image', 'pattern', 'gradient', 'text', 'style'] as Tab[]).map((tab) => (
+            <Pressable
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              className={`rounded-xl px-5 py-2.5 ${
+                activeTab === tab ? 'bg-primary' : 'bg-surface-container-low'
+              }`}
+              style={
+                activeTab === tab
+                  ? {
+                      shadowColor: '#874c37',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }
+                  : {}
+              }>
+              <Text
+                className={`font-manrope text-[12px] font-bold uppercase tracking-wider ${
+                  activeTab === tab ? 'text-white' : 'text-on-surface-variant'
+                }`}>
+                {tab}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
 
       {/* Scrollable Controls Container */}
       <ScrollView className="flex-1 px-6 pb-32 pt-4" showsVerticalScrollIndicator={false}>
@@ -360,15 +378,12 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                 className="flex-row pb-2">
                 <Pressable
                   onPress={() => {
-                    if (currentWallpaper.backgroundType === 'pattern') {
-                      updateWallpaper({
-                        backgroundType: 'color',
-                        backgroundValue: currentWallpaper.backgroundValue,
-                        patternConfig: undefined,
-                      });
-                    } else {
-                      updateWallpaper({ patternConfig: undefined });
-                    }
+                    updateWallpaper({
+                      patternConfig: {
+                        ...(currentWallpaper.patternConfig || DEFAULT_WALLPAPER.patternConfig!),
+                        type: 'none',
+                      },
+                    });
                   }}
                   className="flex w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-outline-variant bg-surface-container-lowest"
                   style={{ aspectRatio: 4 / 5 }}>
@@ -470,7 +485,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                   style={{
                     backgroundColor: Array.isArray(currentWallpaper.backgroundValue)
                       ? currentWallpaper.backgroundValue[0]
-                      : '#FF6B35',
+                      : DEFAULT_GRADIENT[0],
                     height: 48,
                     width: 48,
                   }}
@@ -487,7 +502,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                           stopColor={
                             Array.isArray(currentWallpaper.backgroundValue)
                               ? (currentWallpaper.backgroundValue[0] as string)
-                              : '#FF6B35'
+                              : DEFAULT_GRADIENT[0]
                           }
                         />
                         <Stop
@@ -495,7 +510,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                           stopColor={
                             Array.isArray(currentWallpaper.backgroundValue)
                               ? (currentWallpaper.backgroundValue[1] as string)
-                              : '#F7931E'
+                              : DEFAULT_GRADIENT[1]
                           }
                         />
                       </LinearGradient>
@@ -512,7 +527,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                   style={{
                     backgroundColor: Array.isArray(currentWallpaper.backgroundValue)
                       ? currentWallpaper.backgroundValue[1]
-                      : '#F7931E',
+                      : DEFAULT_GRADIENT[1],
                     height: 48,
                     width: 48,
                   }}
@@ -667,22 +682,30 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 8 }}
                 className="flex-row pb-2">
-                <StyleThumb
-                  label="None"
-                  isSelected={!currentWallpaper.textStyle}
+                <Pressable
                   onPress={() => updateWallpaper({ textStyle: undefined })}
-                />
+                  className="w-28">
+                  <StyleThumb
+                    label="None"
+                    isSelected={!currentWallpaper.textStyle}
+                    onPress={() => {}}
+                  />
+                </Pressable>
 
                 {Object.keys(maps)
                   .slice(0, 3)
                   .map((styleKey) => (
-                    <StyleThumb
+                    <Pressable
                       key={styleKey}
-                      styleKey={styleKey}
-                      label={styleKey}
-                      isSelected={currentWallpaper.textStyle === styleKey}
                       onPress={() => updateWallpaper({ textStyle: styleKey })}
-                    />
+                      className="w-28">
+                      <StyleThumb
+                        styleKey={styleKey}
+                        label={styleKey}
+                        isSelected={currentWallpaper.textStyle === styleKey}
+                        onPress={() => {}}
+                      />
+                    </Pressable>
                   ))}
 
                 <Pressable
@@ -702,15 +725,20 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
 
       {/* Sticky Primary Actions */}
       <View
-        className="absolute bottom-0 left-0 right-0 flex-col gap-3 px-6 pb-8 pt-8"
+        className="absolute bottom-0 left-0 right-0 flex-row gap-3 px-6 pb-8 pt-8"
         style={{ paddingBottom: Math.max(insets.bottom, 20) }}>
+        <Pressable className="flex-1 rounded-xl bg-secondary-container py-3 transition-colors hover:bg-secondary-container/80">
+          <Text className="text-center font-manrope text-xs font-bold text-secondary">
+            Set Daily Affirmation
+          </Text>
+        </Pressable>
         <Pressable
           onPress={(e) => {
             e.stopPropagation();
             onApply?.();
           }}
           disabled={isApplying}
-          className="w-full rounded-2xl bg-primary py-4 shadow-xl transition-all active:scale-[0.98]"
+          className="flex-1 rounded-xl bg-primary py-3 shadow-xl transition-all active:scale-[0.98]"
           style={{
             shadowColor: '#874c37',
             shadowOffset: { width: 0, height: 4 },
@@ -725,23 +753,6 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
             </Text>
           )}
         </Pressable>
-        <View className="flex-row gap-3">
-          <Pressable className="flex-1 rounded-xl bg-secondary-container py-3 transition-colors hover:bg-secondary-container/80">
-            <Text className="text-center font-manrope text-xs font-bold text-secondary">
-              Set Daily Affirmation
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation();
-              onSaveToLibrary?.();
-            }}
-            className="flex-1 rounded-xl bg-surface-container-low py-3 transition-colors hover:bg-surface-container">
-            <Text className="text-center font-manrope text-xs font-bold text-on-surface-variant">
-              Save to Library
-            </Text>
-          </Pressable>
-        </View>
       </View>
 
       {/* MODALS */}
@@ -879,17 +890,10 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                 key={'allpat' + key}
                 onPress={() => {
                   updateWallpaper({
-                    backgroundType: 'pattern',
-                    backgroundValue: ['pattern', 'color'].includes(currentWallpaper.backgroundType!)
-                      ? currentWallpaper.backgroundValue
-                      : '#fbf9f4',
                     patternConfig: {
-                      ...currentWallpaper.patternConfig,
+                      ...(currentWallpaper.patternConfig || DEFAULT_WALLPAPER.patternConfig!),
                       type: key,
-                      opacity: currentWallpaper.patternConfig?.opacity || 0.2,
-                      scale: 1,
-                      color: currentWallpaper.patternConfig?.color || '#000000',
-                    } as any,
+                    },
                   });
                   setIsPatternsModalOpen(false);
                 }}
@@ -924,27 +928,35 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
             contentContainerStyle={{
               padding: 24,
             }}>
-            <StyleThumb
-              label="Standard"
-              isFullWidth
-              isSelected={!currentWallpaper.textStyle}
+            <Pressable
               onPress={() => {
                 updateWallpaper({ textStyle: undefined });
                 setIsStylesModalOpen(false);
               }}
-            />
-            {Object.keys(maps).map((styleKey) => (
+              className="w-full">
               <StyleThumb
-                key={'modal' + styleKey}
-                styleKey={styleKey}
-                label={styleKey}
+                label="Standard"
                 isFullWidth
-                isSelected={currentWallpaper.textStyle === styleKey}
+                isSelected={!currentWallpaper.textStyle}
+                onPress={() => {}}
+              />
+            </Pressable>
+            {Object.keys(maps).map((styleKey) => (
+              <Pressable
+                key={'modal' + styleKey}
                 onPress={() => {
                   updateWallpaper({ textStyle: styleKey });
                   setIsStylesModalOpen(false);
                 }}
-              />
+                className="w-full">
+                <StyleThumb
+                  styleKey={styleKey}
+                  label={styleKey}
+                  isFullWidth
+                  isSelected={currentWallpaper.textStyle === styleKey}
+                  onPress={() => {}}
+                />
+              </Pressable>
             ))}
           </ScrollView>
         </View>
@@ -974,24 +986,14 @@ function PatternThumb({ pattern, currentWallpaper, updateWallpaper, index }: any
     <Pressable
       onPress={() =>
         updateWallpaper({
-          backgroundType: 'pattern',
-          backgroundValue: ['pattern', 'color'].includes(currentWallpaper.backgroundType!)
-            ? currentWallpaper.backgroundValue
-            : '#fbf9f4',
           patternConfig: {
-            ...currentWallpaper.patternConfig,
+            ...(currentWallpaper.patternConfig || DEFAULT_WALLPAPER.patternConfig!),
             type: pattern,
-            opacity: currentWallpaper.patternConfig?.opacity || 0.2,
-            scale: 1,
-            color: currentWallpaper.patternConfig?.color || '#000000',
-          } as any,
+          },
         })
       }
       className={`relative w-20 shrink-0 overflow-hidden rounded-xl bg-surface-container-low ${
-        currentWallpaper.backgroundType === 'pattern' &&
-        currentWallpaper.patternConfig?.type === pattern
-          ? 'border-2 border-primary'
-          : ''
+        currentWallpaper.patternConfig?.type === pattern ? 'border-2 border-primary' : ''
       }`}
       style={{ aspectRatio: 4 / 5 }}>
       <MemoizedPattern
