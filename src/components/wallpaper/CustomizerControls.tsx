@@ -30,6 +30,7 @@ interface CustomizerControlsProps {
   onApply?: () => void;
   isApplying?: boolean;
   onSaveToLibrary?: () => void;
+  onClose: () => void;
 }
 
 const PREDEFINED_COLORS = [
@@ -117,6 +118,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
   onApply,
   isApplying,
   onSaveToLibrary,
+  onClose,
 }) => {
   const {
     currentWallpaper,
@@ -188,10 +190,19 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
   );
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 z-40 max-h-[50%] flex-col rounded-t-[2.5rem] bg-surface-container-lowest shadow-[0_-20px_50px_rgba(83,67,62,0.15)]">
-      {/* Sheet Handle */}
-      <View className="w-full flex-row justify-center pb-2 pt-4">
-        <View className="h-1.5 w-12 rounded-full bg-outline-variant/30" />
+    <View className="absolute bottom-0 left-0 right-0 z-40 max-h-[40%] flex-col rounded-t-[2.5rem] bg-surface-container-lowest shadow-[0_-20px_50px_rgba(83,67,62,0.15)]">
+      {/* Sheet Handle & Close */}
+      <View
+        className="w-full flex-row items-center justify-between pb-2 pl-8 pr-6 pt-4"
+        style={{ paddingBottom: 10 }}>
+        <Text className="font-manrope text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/40">
+          Personalize Design
+        </Text>
+        <Pressable
+          onPress={onClose}
+          className="h-8 w-8 items-center justify-center rounded-full bg-surface-container-high active:scale-90">
+          <X size={16} color="#53433e" strokeWidth={3} />
+        </Pressable>
       </View>
 
       {/* Tabs Navigation */}
@@ -725,7 +736,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
 
       {/* Sticky Primary Actions */}
       <View
-        className="absolute bottom-0 left-0 right-0 flex-row gap-3 px-6 pb-8 pt-8"
+        className="absolute bottom-0 left-0 right-0 flex-row gap-3 border-t border-outline-variant/70 bg-surface px-6 pb-8 pt-3"
         style={{ paddingBottom: Math.max(insets.bottom, 20) }}>
         <Pressable className="flex-1 rounded-xl bg-secondary-container py-3 transition-colors hover:bg-secondary-container/80">
           <Text className="text-center font-manrope text-xs font-bold text-secondary">

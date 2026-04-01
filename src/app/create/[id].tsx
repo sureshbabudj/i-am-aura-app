@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { X } from 'lucide-react-native';
+import { X, Settings2 } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
@@ -10,8 +10,16 @@ import { CustomizerControls } from '@/src/components/wallpaper/CustomizerControl
 
 import * as MediaLibrary from 'expo-media-library';
 import ViewShot from 'react-native-view-shot';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  interpolate,
+} from 'react-native-reanimated';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function CustomizeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -20,6 +28,39 @@ export default function CustomizeScreen() {
   const viewShotRef = useRef<ViewShot>(null);
   const [saving, setSaving] = useState(false);
   const insets = useSafeAreaInsets();
+
+  const [isControlsVisible, setIsControlsVisible] = useState(false);
+
+  // Animation values
+  const controlsY = useSharedValue(SCREEN_HEIGHT);
+  const scale = useSharedValue(1);
+
+  const toggleControls = (visible: boolean) => {
+    setIsControlsVisible(visible);
+    controlsY.value = withSpring(visible ? 0 : SCREEN_HEIGHT, {
+      damping: 25,
+      stiffness: 100,
+      mass: 0.8,
+    });
+    scale.value = withSpring(visible ? 0.6 : 1, {
+      damping: 25,
+      stiffness: 100,
+      mass: 0.8,
+    });
+  };
+
+  const animatedCanvasStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: interpolate(scale.value, [0.82, 1], [-SCREEN_HEIGHT * 0.05, 0]) },
+      { scale: scale.value },
+    ],
+    borderRadius: interpolate(scale.value, [0.82, 1], [32, 0]),
+    overflow: 'hidden',
+  }));
+
+  const animatedControlsStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: controlsY.value }],
+  }));
 
   useEffect(() => {
     if (id && id !== 'new') {
@@ -81,7 +122,7 @@ export default function CustomizeScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <StatusBar style="dark" />
+      <StatusBar style={isControlsVisible ? 'dark' : 'light'} />
 
       {/* Header Overlay */}
       <View
@@ -89,13 +130,13 @@ export default function CustomizeScreen() {
         className="pointer-events-auto absolute left-0 right-0 top-0 z-20 flex-row items-center justify-between px-8 py-4">
         <Pressable
           onPress={() => router.back()}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-lowest/20 backdrop-blur-md active:scale-90">
-          <X size={24} color="#ffffff" />
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-black/10 backdrop-blur-md active:scale-90">
+          <X size={24} color={isControlsVisible ? '#000000' : '#ffffff'} />
         </Pressable>
 
         <View className="flex-col items-center">
           <Text
-            className="font-noto-serif-italic text-2xl tracking-tight text-white"
+            className={`font-noto-serif-italic text-2xl tracking-tight ${isControlsVisible ? 'text-on-surface' : 'text-white'}`}
             style={{
               textShadowColor: 'rgba(0,0,0,0.1)',
               textShadowOffset: { width: 0, height: 2 },
@@ -103,29 +144,64 @@ export default function CustomizeScreen() {
             }}>
             I Am
           </Text>
-          <Text className="font-manrope text-[10px] uppercase tracking-widest text-white/80">
-            Customize
+          <Text
+            className={`font-manrope text-[10px] uppercase tracking-widest ${isControlsVisible ? 'text-on-surface-variant' : 'text-white/80'}`}>
+            Personalize
           </Text>
         </View>
 
         <Pressable
           onPress={handleSave}
-          className="rounded-full bg-white px-6 py-2 shadow-lg active:scale-95">
-          <Text className="font-manrope text-sm font-bold text-primary">Save</Text>
+          className={`rounded-full px-6 py-2 shadow-lg active:scale-95 ${isControlsVisible ? 'bg-primary' : 'bg-white'}`}>
+          <Text
+            className={`font-manrope text-sm font-bold ${isControlsVisible ? 'text-white' : 'text-primary'}`}>
+            Save
+          </Text>
         </Pressable>
       </View>
 
-      {/* Main Canvas */}
-      <View className="flex-1 pb-48">
+      {/* Main Canvas with Animation */}
+      <Animated.View style={[{ flex: 1 }, animatedCanvasStyle]}>
         <WallpaperCanvas ref={viewShotRef as any} />
-      </View>
+      </Animated.View>
 
-      {/* Controls Overlay - Now with absolute positioning inside component */}
-      <CustomizerControls
-        onApply={handleSaveToGallery}
-        isApplying={saving}
-        onSaveToLibrary={handleSave}
-      />
+      {/* Floating Customize Toggle Button */}
+      {!isControlsVisible && (
+        <View
+          pointerEvents="box-none"
+          className="absolute bottom-12 left-0 right-0 z-30 flex-row justify-center">
+          <Pressable
+            onPress={() => toggleControls(true)}
+            className="flex-row items-center gap-3 rounded-full bg-white/90 px-6 py-4 shadow-2xl backdrop-blur-xl active:scale-95"
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.2,
+              shadowRadius: 20,
+              elevation: 10,
+            }}>
+            <Settings2 size={20} color="#874c37" strokeWidth={2.5} />
+            <Text className="font-manrope text-sm font-bold uppercase tracking-widest text-primary">
+              Customize
+            </Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Animated Controls Section */}
+      <Animated.View
+        pointerEvents="box-none"
+        style={[StyleSheet.absoluteFill, animatedControlsStyle]}
+        className="z-40 justify-end">
+        <CustomizerControls
+          onApply={handleSaveToGallery}
+          isApplying={saving}
+          onSaveToLibrary={handleSave}
+          onClose={() => toggleControls(false)}
+        />
+      </Animated.View>
     </View>
   );
 }
+
+const StyleSheet = require('react-native').StyleSheet;
