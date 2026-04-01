@@ -15,14 +15,16 @@ import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 import { MOOD_IMAGES } from '@/src/constants/images';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, Palette, Ban, Grid } from 'lucide-react-native';
+import { X, Palette, Ban, Grid, Pipette } from 'lucide-react-native';
 import { generatePatternSVG, PATTERN_DEFINITIONS } from '@/src/services/wallpaper/patterns';
-import { SvgXml } from 'react-native-svg';
+import { transformText, maps } from '@/src/services/text/unicode-map';
+import { SvgXml, Svg, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import Slider from '@react-native-community/slider';
 import ColorPicker, { Panel1, HueSlider } from 'reanimated-color-picker';
-import { runOnJS } from 'react-native-reanimated';
+import { colors } from '@/src/constants/colors';
+import { runOnJS } from 'react-native-worklets';
 
-type Tab = 'color' | 'image' | 'pattern' | 'gradient' | 'text';
+type Tab = 'color' | 'image' | 'pattern' | 'gradient' | 'text' | 'style';
 
 interface CustomizerControlsProps {
   onApply?: () => void;
@@ -42,6 +44,12 @@ const PREDEFINED_COLORS = [
   '#eab308',
   '#22c55e',
 ];
+
+// Memoized helper to generate patterns to avoid unnecessary re-renders
+const MemoizedPattern = React.memo(({ xml }: { xml: string }) => (
+  <SvgXml xml={xml} width="100%" height="100%" pointerEvents="none" />
+));
+
 const PREDEFINED_GRADIENTS = [
   ['#FF6B35', '#F7931E'],
   ['#FF3366', '#FF9933'],
@@ -54,6 +62,53 @@ const PREDEFINED_GRADIENTS = [
   ['#e1eec3', '#f05053'],
   ['#000000', '#434343'],
 ];
+
+const StyleThumb = ({
+  styleKey,
+  label,
+  isSelected,
+  onPress,
+  isFullWidth,
+}: {
+  styleKey?: string;
+  label: string;
+  isSelected: boolean;
+  onPress: () => void;
+  isFullWidth?: boolean;
+}) => {
+  const displayLabel = label
+    .split(/(?=[A-Z])/)
+    .join(' ')
+    .replace(/^\w/, (c) => c.toUpperCase());
+
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`flex flex-col items-center justify-center rounded-xl border p-4 transition-transform active:scale-95 ${
+        isFullWidth ? 'mb-3 w-full' : 'w-28 shrink-0'
+      } ${
+        isSelected
+          ? 'border-2 border-primary bg-primary/5'
+          : 'border-1 border-outline-variant/30 bg-surface-container-lowest'
+      }`}
+      style={!isFullWidth ? { aspectRatio: 1 } : {}}>
+      <Text
+        numberOfLines={2}
+        className={`text-center font-manrope font-bold ${isFullWidth ? 'text-lg' : 'text-[14px]'} ${
+          isSelected ? 'text-primary' : 'text-on-surface'
+        }`}>
+        {styleKey ? transformText('Affirmation', styleKey as any) : 'Affirmation'}
+      </Text>
+      <Text
+        numberOfLines={1}
+        className={`mt-1 text-center font-manrope text-[10px] uppercase tracking-widest ${
+          isSelected ? 'text-primary/70' : 'text-on-surface-variant/50'
+        }`}>
+        {displayLabel}
+      </Text>
+    </Pressable>
+  );
+};
 
 export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
   onApply,
@@ -74,6 +129,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
   // Modals state
   const [isImagesModalOpen, setIsImagesModalOpen] = useState(false);
   const [isPatternsModalOpen, setIsPatternsModalOpen] = useState(false);
+  const [isStylesModalOpen, setIsStylesModalOpen] = useState(false);
 
   // Color Picker Modal state
   const [colorPickerTarget, setColorPickerTarget] = useState<
@@ -140,7 +196,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20, gap: 24 }}
         className="flex-row py-2">
-        {(['color', 'image', 'pattern', 'gradient', 'text'] as Tab[]).map((tab) => (
+        {(['color', 'image', 'pattern', 'gradient', 'text', 'style'] as Tab[]).map((tab) => (
           <Pressable
             key={tab}
             onPress={() => setActiveTab(tab)}
@@ -356,7 +412,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                 className="flex-row pb-2">
                 <Pressable
                   onPress={() => {
-                    setTempHex('#');
+                    setTempHex(currentWallpaper.patternConfig?.color || '#000000');
                     setColorPickerTarget('pattern');
                   }}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-dashed border-outline-variant transition-colors hover:bg-surface-container">
@@ -401,47 +457,51 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
         {/* GRADIENT TAB */}
         {activeTab === 'gradient' && (
           <View className="space-y-6 pb-32">
-            <View>
+            <View className="mb-2">
               <Text className="mb-4 font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant/60">
                 Gradient Colors
               </Text>
-              <View className="flex-row items-center justify-center gap-6">
+              <View className="flex-row items-center justify-center gap-1">
                 <Pressable
                   onPress={() => {
                     setTempHex('#');
                     setColorPickerTarget('gradient0');
                   }}
-                  className="h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-outline-variant bg-surface-container">
-                  <View
-                    style={{
-                      backgroundColor: Array.isArray(currentWallpaper.backgroundValue)
-                        ? currentWallpaper.backgroundValue[0]
-                        : '#FF6B35',
-                    }}
-                    className="absolute inset-0"
-                  />
-                  <Text className="z-10 font-manrope text-[8px] font-bold text-white shadow-sm">
-                    Left
-                  </Text>
+                  style={{
+                    backgroundColor: Array.isArray(currentWallpaper.backgroundValue)
+                      ? currentWallpaper.backgroundValue[0]
+                      : '#FF6B35',
+                    height: 48,
+                    width: 48,
+                  }}
+                  className="items-center justify-center rounded-xl border-2 border-outline-variant shadow-sm active:scale-90">
+                  <Pipette size={18} color="white" strokeWidth={2.5} />
                 </Pressable>
 
-                <View className="h-4 w-20 flex-row overflow-hidden rounded-full border border-outline-variant">
-                  <View
-                    style={{
-                      backgroundColor: Array.isArray(currentWallpaper.backgroundValue)
-                        ? currentWallpaper.backgroundValue[0]
-                        : '#FF6B35',
-                      flex: 1,
-                    }}
-                  />
-                  <View
-                    style={{
-                      backgroundColor: Array.isArray(currentWallpaper.backgroundValue)
-                        ? currentWallpaper.backgroundValue[1]
-                        : '#F7931E',
-                      flex: 1,
-                    }}
-                  />
+                <View className="h-[48px] grow items-center justify-center px-1">
+                  <Svg width="100%" height="48">
+                    <Defs>
+                      <LinearGradient id="gradPreview" x1="0" y1="0" x2="1" y2="0">
+                        <Stop
+                          offset="0"
+                          stopColor={
+                            Array.isArray(currentWallpaper.backgroundValue)
+                              ? (currentWallpaper.backgroundValue[0] as string)
+                              : '#FF6B35'
+                          }
+                        />
+                        <Stop
+                          offset="1"
+                          stopColor={
+                            Array.isArray(currentWallpaper.backgroundValue)
+                              ? (currentWallpaper.backgroundValue[1] as string)
+                              : '#F7931E'
+                          }
+                        />
+                      </LinearGradient>
+                    </Defs>
+                    <Rect width="100%" height="48" rx={12} fill="url(#gradPreview)" />
+                  </Svg>
                 </View>
 
                 <Pressable
@@ -449,18 +509,15 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                     setTempHex('#');
                     setColorPickerTarget('gradient1');
                   }}
-                  className="h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-outline-variant bg-surface-container">
-                  <View
-                    style={{
-                      backgroundColor: Array.isArray(currentWallpaper.backgroundValue)
-                        ? currentWallpaper.backgroundValue[1]
-                        : '#F7931E',
-                    }}
-                    className="absolute inset-0"
-                  />
-                  <Text className="z-10 font-manrope text-[8px] font-bold text-white shadow-sm">
-                    Right
-                  </Text>
+                  style={{
+                    backgroundColor: Array.isArray(currentWallpaper.backgroundValue)
+                      ? currentWallpaper.backgroundValue[1]
+                      : '#F7931E',
+                    height: 48,
+                    width: 48,
+                  }}
+                  className="items-center justify-center rounded-xl border-2 border-outline-variant shadow-sm active:scale-90">
+                  <Pipette size={18} color="white" strokeWidth={2.5} />
                 </Pressable>
               </View>
             </View>
@@ -597,6 +654,50 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
             </View>
           </View>
         )}
+
+        {/* STYLE TAB */}
+        {activeTab === 'style' && (
+          <View className="space-y-6 pb-32">
+            <View>
+              <Text className="mb-4 font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant/60">
+                Text Styles
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+                className="flex-row pb-2">
+                <StyleThumb
+                  label="None"
+                  isSelected={!currentWallpaper.textStyle}
+                  onPress={() => updateWallpaper({ textStyle: undefined })}
+                />
+
+                {Object.keys(maps)
+                  .slice(0, 3)
+                  .map((styleKey) => (
+                    <StyleThumb
+                      key={styleKey}
+                      styleKey={styleKey}
+                      label={styleKey}
+                      isSelected={currentWallpaper.textStyle === styleKey}
+                      onPress={() => updateWallpaper({ textStyle: styleKey })}
+                    />
+                  ))}
+
+                <Pressable
+                  onPress={() => setIsStylesModalOpen(true)}
+                  className="flex w-28 shrink-0 flex-col items-center justify-center rounded-xl bg-surface-container transition-colors hover:bg-surface-container-high"
+                  style={{ aspectRatio: 1 }}>
+                  <Grid size={24} color="#53433e" />
+                  <Text className="mt-2 font-manrope text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/50">
+                    More
+                  </Text>
+                </Pressable>
+              </ScrollView>
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       {/* Sticky Primary Actions */}
@@ -654,7 +755,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
               <Text className="mb-2 font-manrope text-[10px] font-bold uppercase tracking-[0.2rem] text-secondary">
                 Spectrum Selection
               </Text>
-              <Text className="font-noto-serif-italic text-center text-4xl leading-tight text-on-surface">
+              <Text className="text-center font-noto-serif-italic text-4xl leading-tight text-on-surface">
                 Choose Your{'\n'}
                 <Text className="italic text-primary">Aura</Text>
               </Text>
@@ -664,7 +765,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
             <View className="mb-8 w-full items-center justify-center drop-shadow-lg">
               <ColorPicker
                 style={{ width: '100%', gap: 16 }}
-                value={tempHex.length === 4 || tempHex.length === 7 ? tempHex : '#874c37'}
+                value={tempHex.length === 4 || tempHex.length === 7 ? tempHex : colors.primary}
                 onComplete={(color) => {
                   'worklet';
                   runOnJS(setTempHex)(color.hex);
@@ -763,7 +864,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
           <View className="flex-row items-center justify-between px-6 pb-4">
             <Text className="font-manrope text-xl font-bold text-on-surface">All Patterns</Text>
             <Pressable onPress={() => setIsPatternsModalOpen(false)} className="p-2">
-              <X size={24} color="#53433e" />
+              <X size={24} color={colors['on-surface-variant']} />
             </Pressable>
           </View>
           <ScrollView
@@ -794,17 +895,56 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
                 }}
                 className="w-[47%] overflow-hidden rounded-xl bg-surface-container-low"
                 style={{ aspectRatio: 4 / 5 }}>
-                <SvgXml
+                <MemoizedPattern
                   xml={generatePatternSVG({
                     type: key as any,
                     opacity: 0.5,
                     scale: 1,
                     color: currentWallpaper.patternConfig?.color || '#30312e',
                   })}
-                  width="100%"
-                  height="100%"
                 />
               </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* All Styles Modal */}
+      <Modal visible={isStylesModalOpen} transparent animationType="slide">
+        <View className="flex-1 bg-surface-container-lowest pt-14">
+          <View className="flex-row items-center justify-between px-6 pb-4">
+            <Text className="font-manrope text-xl font-bold text-on-surface">
+              Typography Styles
+            </Text>
+            <Pressable onPress={() => setIsStylesModalOpen(false)} className="p-2">
+              <X size={24} color={colors['on-surface-variant']} />
+            </Pressable>
+          </View>
+          <ScrollView
+            contentContainerStyle={{
+              padding: 24,
+            }}>
+            <StyleThumb
+              label="Standard"
+              isFullWidth
+              isSelected={!currentWallpaper.textStyle}
+              onPress={() => {
+                updateWallpaper({ textStyle: undefined });
+                setIsStylesModalOpen(false);
+              }}
+            />
+            {Object.keys(maps).map((styleKey) => (
+              <StyleThumb
+                key={'modal' + styleKey}
+                styleKey={styleKey}
+                label={styleKey}
+                isFullWidth
+                isSelected={currentWallpaper.textStyle === styleKey}
+                onPress={() => {
+                  updateWallpaper({ textStyle: styleKey });
+                  setIsStylesModalOpen(false);
+                }}
+              />
             ))}
           </ScrollView>
         </View>
@@ -854,15 +994,13 @@ function PatternThumb({ pattern, currentWallpaper, updateWallpaper, index }: any
           : ''
       }`}
       style={{ aspectRatio: 4 / 5 }}>
-      <SvgXml
+      <MemoizedPattern
         xml={generatePatternSVG({
           type: pattern as any,
           opacity: 0.5,
           scale: 1,
           color: currentWallpaper.patternConfig?.color || '#30312e',
         })}
-        width="100%"
-        height="100%"
       />
     </Pressable>
   );

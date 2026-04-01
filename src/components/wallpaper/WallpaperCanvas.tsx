@@ -5,6 +5,7 @@ import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanima
 import { LinearGradient } from 'expo-linear-gradient';
 import { SvgXml } from 'react-native-svg';
 import { generatePatternSVG } from '@/src/services/wallpaper/patterns';
+import { transformText } from '@/src/services/text/unicode-map';
 import { Image } from 'expo-image';
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 import ViewShot from 'react-native-view-shot';
@@ -20,13 +21,19 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
     patternConfig,
     imageOpacity = 1,
     imageSaturation = 1,
+    affirmation = '',
     textContent = '',
     textColor = '#FFFFFF',
     textSize = 32,
     textAlignment = { vertical: 'center', horizontal: 'center' },
     textOpacity = 1,
+    textStyle,
     fontFamily = 'Inter-SemiBold',
   } = currentWallpaper;
+
+  const displayAffirmation = textStyle
+    ? transformText(textContent || affirmation, textStyle as any)
+    : textContent || affirmation;
 
   // Text position shared values for drag interaction
   const textX = useSharedValue(0);
@@ -41,7 +48,12 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
     if (!config || !config.type) return null;
     return (
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <SvgXml xml={generatePatternSVG(config)} width="100%" height="100%" style={StyleSheet.absoluteFill} />
+        <SvgXml
+          xml={generatePatternSVG(config)}
+          width="100%"
+          height="100%"
+          style={StyleSheet.absoluteFill}
+        />
       </View>
     );
   };
@@ -101,7 +113,10 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
         );
 
       case 'pattern':
-        const bgColor = typeof backgroundValue === 'string' && backgroundValue.startsWith('#') ? backgroundValue : '#FBF9F4';
+        const bgColor =
+          typeof backgroundValue === 'string' && backgroundValue.startsWith('#')
+            ? backgroundValue
+            : '#FBF9F4';
         const activePatternType = patternConfig?.type || 'grid';
         const mergedPatternConfig = {
           ...patternConfig,
@@ -168,7 +183,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
                   textAlign: textAlignment.horizontal as any,
                 },
               ]}>
-              {textContent || currentWallpaper.affirmation}
+              {displayAffirmation}
             </Animated.Text>
           </Animated.View>
 

@@ -40,6 +40,7 @@ export interface Wallpaper {
   textSize: number;
   textAlignment: TextAlignment;
   textOpacity: number;
+  textStyle?: string; // e.g., 'serifBold', 'script'
   fontFamily: string;
   textContent: string;
 
