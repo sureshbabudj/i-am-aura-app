@@ -8,7 +8,8 @@ export type PatternType =
   | 'checkerboard'
   | 'stripes'
   | 'circles'
-  | 'boxes';
+  | 'boxes'
+  | 'none';
 
 export interface PatternConfig {
   type: PatternType;
@@ -70,10 +71,16 @@ export const PATTERN_DEFINITIONS: Record<PatternType, string> = {
       <rect x="5" y="5" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1" rx="5"/>
     </pattern>
   `,
+  none: '',
 };
 
 export const generatePatternSVG = (config: PatternConfig): string => {
   const { type, opacity, color } = config;
+
+  if (type === 'none' || !PATTERN_DEFINITIONS[type]) {
+    return '';
+  }
+
   const patternDef = PATTERN_DEFINITIONS[type].replace(/currentColor/g, color);
 
   return `

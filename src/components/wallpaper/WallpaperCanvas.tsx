@@ -45,15 +45,13 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
   }));
 
   const renderPattern = (config: any, id: string) => {
-    if (!config || !config.type) return null;
+    if (!config || !config.type || config.type === 'none') return null;
+    const xml = generatePatternSVG(config);
+    if (!xml) return null;
+
     return (
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <SvgXml
-          xml={generatePatternSVG(config)}
-          width="100%"
-          height="100%"
-          style={StyleSheet.absoluteFill}
-        />
+        <SvgXml xml={xml} width="100%" height="100%" style={StyleSheet.absoluteFill} />
       </View>
     );
   };
