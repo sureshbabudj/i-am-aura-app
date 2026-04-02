@@ -13,7 +13,13 @@ interface ImageTabProps {
 
 export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
   const { currentWallpaper, updateWallpaper } = useWallpaperStore();
-  const allImages = MOOD_IMAGES[currentWallpaper.moodId!] || [];
+
+  const allImages = React.useMemo(() => {
+    const images = MOOD_IMAGES[currentWallpaper.moodId!] || [];
+    // Simple deterministic shuffle based on moodId to keep it stable during render
+    // but random enough for variety
+    return [...images].sort(() => 0.5 - Math.random());
+  }, [currentWallpaper.moodId]);
 
   return (
     <View className="space-y-6 pb-32">
@@ -39,24 +45,23 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
           </Pressable>
 
           {allImages.slice(0, 7).map((url) => {
-            // Transform thumbnail URL to modal thumb size if needed, but per requirement tab uses SMALL_THUMB_IMG_WIDTH/HEIGHT
-            // Assuming allImages already has SMALL_THUMB_IMG_WIDTH/HEIGHT
+            const isSelected = currentWallpaper.backgroundValue === url;
             return (
               <Pressable
                 key={url}
                 onPress={() => {
-                  // For the actual wallpaper, we might want higher res, but updateWallpaper stores the value
-                  // We'll replace it in the canvas.
                   updateWallpaper({ backgroundType: 'image', backgroundValue: url });
                 }}
                 className={`relative w-20 shrink-0 overflow-hidden rounded-xl ${
-                  currentWallpaper.backgroundValue === url ? 'border-2 border-primary' : ''
+                  isSelected ? 'border-2 border-primary' : 'bg-surface-container-low'
                 }`}
                 style={{ aspectRatio: 4 / 5 }}>
                 <Image
                   source={{ uri: url }}
                   style={{ width: '100%', height: '100%' }}
                   contentFit="cover"
+                  transition={200}
+                  cachePolicy="memory-disk"
                 />
               </Pressable>
             );

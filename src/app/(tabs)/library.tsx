@@ -59,17 +59,22 @@ export default function LibraryScreen() {
             />
           )}
           {wallpaper.backgroundType === 'image' && (
-            <Image
-              source={{
-                uri: (wallpaper.backgroundValue as string)
-                  .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
-                  .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`),
-              }}
-              style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
-              className="absolute inset-0 z-0 h-full w-full"
-              contentFit="cover"
-              transition={200}
-            />
+            <View style={StyleSheet.absoluteFill}>
+              <Image
+                source={{
+                  uri: (wallpaper.backgroundValue as string)
+                    .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
+                    .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`),
+                }}
+                style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+                className="absolute inset-0 z-0 h-full w-full"
+                contentFit="cover"
+                transition={200}
+              />
+              <View className="absolute bottom-4 right-4 z-10 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-md">
+                <Text className="font-manrope text-[10px] font-medium text-white/90">Unsplash</Text>
+              </View>
+            </View>
           )}
 
           <LinearGradient

@@ -90,14 +90,14 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
         );
 
       case 'image':
+        const imageUrl = (backgroundValue as string)
+          .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${FULL_IMG_WIDTH}`)
+          .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${FULL_IMG_HEIGHT}`);
+
         return (
           <View style={StyleSheet.absoluteFill}>
             <Image
-              source={{
-                uri: (backgroundValue as string)
-                  .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${FULL_IMG_WIDTH}`)
-                  .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${FULL_IMG_HEIGHT}`),
-              }}
+              source={{ uri: imageUrl }}
               style={[
                 StyleSheet.absoluteFill,
                 {
@@ -105,7 +105,8 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
                 },
               ]}
               contentFit="cover"
-              transition={200}
+              transition={300}
+              placeholderContentFit="cover"
             />
             {imageSaturation !== 1 && (
               <View
