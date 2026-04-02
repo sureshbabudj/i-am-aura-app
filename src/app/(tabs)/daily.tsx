@@ -16,8 +16,9 @@ export default function DailyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  // Get the first item from the daily queue or the first saved wallpaper
-  const dailyWallpaperId = dailyQueue[0] || savedWallpapers.find((w) => w.isDaily)?.id;
+  // Get the first item from the daily queue, or the first daily item, or fallback to the first saved wallpaper
+  const dailyWallpaperId =
+    dailyQueue?.[0] || savedWallpapers.find((w) => w.isDaily)?.id || savedWallpapers[0]?.id;
   const dailyWallpaper = savedWallpapers.find((w) => w.id === dailyWallpaperId);
 
   const moodConfig = dailyWallpaper ? MOODS[dailyWallpaper.moodId as MoodId] : null;
@@ -74,7 +75,7 @@ export default function DailyScreen() {
                   numberOfLines={size === 'small' ? 3 : 5}
                   className={`text-center font-bold text-white ${size === 'small' ? 'text-sm' : 'text-lg'}`}
                   style={{ color: dailyWallpaper.textColor, opacity: 0.9 }}>
-                  &quot;{dailyWallpaper.affirmation}&quot;
+                  &quot;{dailyWallpaper.quote}&quot;
                 </Text>
                 {size !== 'small' && (
                   <View className="mt-3 rounded-full bg-black/30 px-3 py-1 backdrop-blur-md">
@@ -120,7 +121,7 @@ export default function DailyScreen() {
                   Rotation Active
                 </Text>
                 <Text className="font-manrope text-xs text-on-primary-container">
-                  Your widgets will sync with this affirmation.
+                  Your widgets will sync with this quote.
                 </Text>
               </View>
               <Pressable
@@ -141,7 +142,7 @@ export default function DailyScreen() {
               <Layout size={32} color={colors['on-surface-variant']} />
             </View>
             <Text className="mb-2 text-center font-noto-serif text-xl text-on-surface">
-              No active affirmation
+              No active quote
             </Text>
             <Text className="mb-8 text-center font-manrope text-on-surface-variant">
               Select one of your saved quotes and mark it as &quot;Daily&quot; to see it here and in

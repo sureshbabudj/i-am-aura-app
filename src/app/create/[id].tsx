@@ -155,7 +155,7 @@ export default function CustomizeScreen() {
     }
   };
 
-  if (!currentWallpaper.affirmation) {
+  if (!currentWallpaper.quote) {
     return (
       <View className="flex-1 items-center justify-center bg-surface">
         <ActivityIndicator size="large" color={colors.primary} />

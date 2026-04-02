@@ -28,7 +28,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
     patternConfig,
     imageOpacity = 1,
     imageSaturation = 1,
-    affirmation = '',
+    quote = '',
     textContent = '',
     textColor = colors.white,
     textSize = 32,
@@ -39,8 +39,8 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
   } = currentWallpaper;
 
   const displayQuote = textStyle
-    ? transformText(textContent || affirmation, textStyle as any)
-    : textContent || affirmation;
+    ? transformText(textContent || quote, textStyle as any)
+    : textContent || quote;
 
   // Text position shared values for drag interaction
   const textX = useSharedValue(0);
@@ -183,7 +183,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
             ]}>
             <Animated.Text
               style={[
-                styles.affirmationText,
+                styles.quoteText,
                 {
                   color: textColor,
                   fontSize: textSize,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     padding: 40,
   },
-  affirmationText: {
+  quoteText: {
     fontWeight: '600',
     textShadowColor: 'rgba(0,0,0,0.3)',
     textShadowOffset: { width: 0, height: 2 },

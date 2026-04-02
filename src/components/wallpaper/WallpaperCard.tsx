@@ -100,7 +100,7 @@ export const RenderWallpaperCard = ({
               textAlign: (wallpaper.textAlignment?.horizontal as any) || 'center',
               opacity: wallpaper.textOpacity ?? 1,
             }}>
-            {wallpaper.affirmation}
+            {wallpaper.quote}
           </Text>
         </View>
 

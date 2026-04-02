@@ -21,7 +21,7 @@ export default function LibraryScreen() {
     return savedWallpapers.filter((wp) => {
       const matchesMood = selectedMoodFilter === 'all' || wp.moodId === selectedMoodFilter;
       const matchesSearch =
-        wp.affirmation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        wp.quote.toLowerCase().includes(searchQuery.toLowerCase()) ||
         MOODS[wp.moodId as MoodId]?.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesMood && matchesSearch;
     });
@@ -100,7 +100,7 @@ export default function LibraryScreen() {
         </View>
 
         {filteredWallpapers.length === 0 ? (
-          <View className="mx-auto max-w-lg items-center space-y-6 px-8 py-16 text-center">
+          <View className="mx-auto max-w-lg items-center gap-6 px-8 py-16 text-center">
             <BookOpen size={48} color={`${colors.primary}4D`} />
             <Text className="font-noto-serif text-2xl text-on-surface">
               Keep growing your sanctuary
@@ -112,8 +112,8 @@ export default function LibraryScreen() {
             </Text>
             <Pressable
               onPress={() => router.push('/(tabs)')}
-              className="rounded-full bg-secondary-container px-8 py-3 active:opacity-90">
-              <Text className="font-manrope text-sm font-semibold text-on-secondary-container">
+              className="mt-10 rounded-full bg-surface-container-high px-8 py-3 active:opacity-90">
+              <Text className="font-manrope text-sm font-semibold text-on-surface">
                 Explore New Moods
               </Text>
             </Pressable>

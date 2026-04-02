@@ -1,0 +1,10 @@
+{
+  "name": "widget-bridge",
+  "version": "1.0.0",
+  "description": "Native bridge for Aura widget synchronization",
+  "main": "src/index.ts",
+  "expo": {
+    "name": "widget-bridge",
+    "slug": "widget-bridge"
+  }
+}

@@ -10,13 +10,13 @@ interface MoodState {
 
   // Stats
   moodUsageCount: Record<MoodId, number>;
-  favoriteQuotes: Record<string, string[]>; // moodId -> affirmation indices
+  favoriteQuotes: Record<string, string[]>; // moodId -> quote indices
 
   // Actions
   setSelectedMood: (moodId: MoodId | null) => void;
   markMoodUsed: (moodId: MoodId) => void;
-  toggleFavoriteQuote: (moodId: MoodId, affirmationIndex: number) => void;
-  isQuoteFavorite: (moodId: MoodId, affirmationIndex: number) => boolean;
+  toggleFavoriteQuote: (moodId: MoodId, quoteIndex: number) => void;
+  isQuoteFavorite: (moodId: MoodId, quoteIndex: number) => boolean;
   getRecommendedMood: () => MoodId;
   getMoodStats: () => { mostUsed: MoodId | null; totalCreations: number };
 }
@@ -57,16 +57,16 @@ export const useMoodStore = create<MoodState>()(
         });
       },
 
-      toggleFavoriteQuote: (moodId, affirmationIndex) => {
+      toggleFavoriteQuote: (moodId, quoteIndex) => {
         set((state) => {
           const current = state.favoriteQuotes[moodId] || [];
-          const exists = current.includes(String(affirmationIndex));
+          const exists = current.includes(String(quoteIndex));
 
           let updated: string[];
           if (exists) {
-            updated = current.filter((i) => i !== String(affirmationIndex));
+            updated = current.filter((i) => i !== String(quoteIndex));
           } else {
-            updated = [...current, String(affirmationIndex)];
+            updated = [...current, String(quoteIndex)];
           }
 
           return {
@@ -78,10 +78,10 @@ export const useMoodStore = create<MoodState>()(
         });
       },
 
-      isQuoteFavorite: (moodId, affirmationIndex) => {
+      isQuoteFavorite: (moodId, quoteIndex) => {
         const state = get();
         const favorites = state.favoriteQuotes[moodId] || [];
-        return favorites.includes(String(affirmationIndex));
+        return favorites.includes(String(quoteIndex));
       },
 
       getRecommendedMood: () => {

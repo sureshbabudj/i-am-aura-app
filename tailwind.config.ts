@@ -4,8 +4,6 @@ import { colors } from './src/constants/colors';
 // @ts-ignore
 import preset from 'nativewind/preset';
 
-console.log(colors);
-
 export default {
   content: ['./src/**/*.{js,ts,tsx}'],
   presets: [preset],

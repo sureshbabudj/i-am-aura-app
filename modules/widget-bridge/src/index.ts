@@ -1,15 +1,23 @@
 import { requireNativeModule } from 'expo-modules-core';
 
-const WidgetBridge = requireNativeModule('WidgetBridge');
+// Lazy-load the native module to prevent top-level crashes during initialization
+const getWidgetBridge = () => {
+  try {
+    return requireNativeModule('WidgetBridge');
+  } catch (e) {
+    console.error('WidgetBridge native module not found:', e);
+    return null;
+  }
+};
 
 interface DailyQueue {
-  affirmation: string;
+  quote: string;
   mood: string;
-  time: string;
+  id: string;
 }
 
 export interface WidgetData {
-  affirmation: string;
+  quote: string;
   mood: string;
   moodEmoji: string;
   textColor: string;
@@ -19,20 +27,29 @@ export interface WidgetData {
 }
 
 export const updateWidgetData = async (data: WidgetData): Promise<boolean> => {
-  return await WidgetBridge.updateWidgetData(data);
+  const bridge = getWidgetBridge();
+  if (bridge?.updateWidgetData) {
+    return await bridge.updateWidgetData(data);
+  }
+  return false;
 };
 
 export const setRotationSchedule = async (schedule: {
   enabled: boolean;
-  interval: number; // hours
   startTime: string; // HH:mm
   endTime: string; // HH:mm
 }): Promise<boolean> => {
-  return await WidgetBridge.setRotationSchedule(schedule);
+  const bridge = getWidgetBridge();
+  if (bridge?.setRotationSchedule) {
+    return await bridge.setRotationSchedule(schedule);
+  }
+  return false;
 };
 
 export const getCurrentWidgetData = (): Record<string, string> => {
-  return WidgetBridge.getCurrentWidgetData();
+  const bridge = getWidgetBridge();
+  if (bridge?.getCurrentWidgetData) {
+    return bridge.getCurrentWidgetData();
+  }
+  return {};
 };
-
-export const APP_GROUP_ID = WidgetBridge.appGroupIdentifier;

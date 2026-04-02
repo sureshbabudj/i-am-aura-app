@@ -3,7 +3,7 @@ import SwiftUI
 
 struct QuoteEntry: TimelineEntry {
   let date: Date
-  let affirmation: String
+  let quote: String
   let mood: String
   let moodEmoji: String
   let textColor: Color
@@ -15,7 +15,7 @@ struct Provider: TimelineProvider {
   func placeholder(in context: Context) -> QuoteEntry {
     QuoteEntry(
       date: Date(),
-      affirmation: "I am capable of amazing things",
+      quote: "I am capable of amazing things",
       mood: "motivational",
       moodEmoji: "🔥",
       textColor: .white,
@@ -34,7 +34,7 @@ struct Provider: TimelineProvider {
     let currentDate = Date()
     
     // Load saved data from App Group
-    let defaults = UserDefaults(suiteName: "group.com.yourcompany.iamwallpaper")
+    let defaults = UserDefaults(suiteName: "group.com.sureshbabudj.iamaura")
     
     // Check if rotation is enabled
     if let schedule = defaults?.dictionary(forKey: "rotationSchedule") as? [String: Any],
@@ -47,12 +47,12 @@ struct Provider: TimelineProvider {
       var entryDate = currentDate
       
       for (index, item) in queue.enumerated() {
-        let affirmation = item["affirmation"] as? String ?? "I am enough"
+        let quote = item["quote"] as? String ?? "I am enough"
         let mood = item["mood"] as? String ?? "peaceful"
         
         let entry = QuoteEntry(
           date: entryDate,
-          affirmation: affirmation,
+          quote: quote,
           mood: mood,
           moodEmoji: getEmojiForMood(mood),
           textColor: Color(hex: defaults?.string(forKey: "textColor") ?? "#FFFFFF"),
@@ -73,11 +73,11 @@ struct Provider: TimelineProvider {
   }
   
   private func loadCurrentEntry() -> QuoteEntry {
-    let defaults = UserDefaults(suiteName: "group.com.yourcompany.iamwallpaper")
+    let defaults = UserDefaults(suiteName: "group.com.sureshbabudj.iamaura")
     
     return QuoteEntry(
       date: Date(),
-      affirmation: defaults?.string(forKey: "currentQuote") ?? "I am enough",
+      quote: defaults?.string(forKey: "currentQuote") ?? "I am enough",
       mood: defaults?.string(forKey: "currentMood") ?? "peaceful",
       moodEmoji: defaults?.string(forKey: "currentMoodEmoji") ?? "🌿",
       textColor: Color(hex: defaults?.string(forKey: "textColor") ?? "#FFFFFF"),
@@ -101,7 +101,7 @@ struct Provider: TimelineProvider {
 
 // MARK: - Widget Views
 
-struct IAmWidgetEntryView: View {
+struct AuraWidgetEntryView: View {
   var entry: Provider.Entry
   @Environment(\.widgetFamily) var family
   
@@ -148,7 +148,7 @@ struct SmallWidgetView: View {
           .font(.system(size: 24))
         
         // Quote text (truncated for small size)
-        Text(entry.affirmation)
+        Text(entry.quote)
           .font(.system(size: 12, weight: .semibold, design: .rounded))
           .foregroundColor(entry.textColor)
           .multilineTextAlignment(.center)
@@ -188,7 +188,7 @@ struct MediumWidgetView: View {
             .textCase(.uppercase)
             .tracking(1)
           
-          Text(entry.affirmation)
+          Text(entry.quote)
             .font(.system(size: 16, weight: .semibold, design: .rounded))
             .foregroundColor(entry.textColor)
             .lineLimit(3)
@@ -223,13 +223,13 @@ struct LargeWidgetView: View {
         }
         .padding(.horizontal)
         
-        // Main affirmation
+        // Main quote
         VStack(spacing: 8) {
           Text("I am")
             .font(.system(size: 20, weight: .medium))
             .foregroundColor(entry.textColor.opacity(0.7))
           
-          Text(entry.affirmation.replacingOccurrences(of: "I am ", with: ""))
+          Text(entry.quote.replacingOccurrences(of: "I am ", with: ""))
             .font(.system(size: 28, weight: .bold, design: .rounded))
             .foregroundColor(entry.textColor)
             .multilineTextAlignment(.center)
@@ -280,7 +280,7 @@ struct LockScreenRectangularView: View {
           .font(.system(size: 11, weight: .medium))
           .foregroundColor(.secondary)
         
-        Text(entry.affirmation.replacingOccurrences(of: "I am ", with: ""))
+        Text(entry.quote.replacingOccurrences(of: "I am ", with: ""))
           .font(.system(size: 15, weight: .semibold, design: .rounded))
           .lineLimit(1)
       }
@@ -298,7 +298,7 @@ struct LockScreenInlineView: View {
   var body: some View {
     HStack(spacing: 4) {
       Text(entry.moodEmoji)
-      Text("I am \(entry.affirmation.replacingOccurrences(of: "I am ", with: ""))")
+      Text("I am \(entry.quote.replacingOccurrences(of: "I am ", with: ""))")
         .lineLimit(1)
     }
   }
@@ -307,14 +307,14 @@ struct LockScreenInlineView: View {
 // MARK: - Widget Configuration
 
 @main
-struct IAmWidget: Widget {
-  let kind: String = "IAmWidget"
+struct AuraWidget: Widget {
+  let kind: String = "AuraWidget"
   
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: Provider()) { entry in
-      IAmWidgetEntryView(entry: entry)
+      AuraWidgetEntryView(entry: entry)
     }
-    .configurationDisplayName("I Am Quotes")
+    .configurationDisplayName("Aura Quotes")
     .description("Daily quotes based on your mood")
     .supportedFamilies([
       .systemSmall,

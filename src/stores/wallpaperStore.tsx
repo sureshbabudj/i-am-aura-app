@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { colors, DEFAULT_GRADIENT } from '../constants/colors';
+import { updateWidgetData } from 'widget-bridge';
+import { MOODS, MoodId } from '../constants/moods';
 
 export type BackgroundType = 'color' | 'gradient' | 'image' | 'pattern';
 
@@ -22,7 +24,7 @@ export interface PatternConfig {
 export interface Wallpaper {
   id: string;
   moodId: string;
-  affirmation: string;
+  quote: string;
 
   // Background
   backgroundType: BackgroundType;
@@ -63,7 +65,7 @@ interface WallpaperState {
   dailyQueue: string[]; // wallpaper IDs
 
   // Actions
-  createWallpaper: (moodId: string, affirmation: string) => void;
+  createWallpaper: (moodId: string, quote: string) => void;
   updateWallpaper: (updates: Partial<Wallpaper>) => void;
   saveWallpaper: () => string; // returns ID
   deleteWallpaper: (id: string) => void;
@@ -114,134 +116,187 @@ export const MOOD_DEFAULT_GRADIENTS: Record<string, string[]> = {
 
 export const useWallpaperStore = create<WallpaperState>()(
   persist(
-    (set, get) => ({
-      currentWallpaper: {
-        ...DEFAULT_WALLPAPER,
-        backgroundValue: DEFAULT_GRADIENT,
-      },
-      savedWallpapers: [],
-      dailyQueue: [],
-      recentColors: [],
-      recentGradients: [],
+    (set, get) => {
+      const syncToWidget = () => {
+        const { savedWallpapers, dailyQueue } = get();
 
-      createWallpaper: (moodId, affirmation) => {
-        const moodGradient = MOOD_DEFAULT_GRADIENTS[moodId] || DEFAULT_GRADIENT;
-        set({
-          currentWallpaper: {
-            ...DEFAULT_WALLPAPER,
-            id: Crypto.randomUUID(),
-            moodId,
-            affirmation,
-            backgroundValue: moodGradient,
-            createdAt: new Date().toISOString(),
-          },
-        });
-      },
+        // Find the wallpaper that should be shown on the widget
+        const dailyWallpaperId =
+          dailyQueue?.[0] || savedWallpapers.find((w) => w.isDaily)?.id || savedWallpapers[0]?.id;
+        const wp = savedWallpapers.find((w) => w.id === dailyWallpaperId);
 
-      updateWallpaper: (updates) => {
-        set((state) => ({
-          currentWallpaper: { ...state.currentWallpaper, ...updates },
-        }));
-      },
+        if (wp) {
+          const moodInfo = MOODS[wp.moodId as MoodId];
 
-      saveWallpaper: () => {
-        const { currentWallpaper, savedWallpapers } = get();
-        const id = currentWallpaper.id || Crypto.randomUUID();
-        const wallpaper = { ...currentWallpaper, id } as Wallpaper;
+          // Prepare queue with correct property names for the bridge
+          const queue = dailyQueue
+            .map((id) => {
+              const item = savedWallpapers.find((w) => w.id === id);
+              return item
+                ? {
+                    id: item.id,
+                    quote: item.quote,
+                    mood: item.moodId,
+                    time: '', // Optional if needed for Swift code
+                  }
+                : null;
+            })
+            .filter(Boolean);
 
-        const existingIndex = savedWallpapers.findIndex((w) => w.id === id);
-        let newSaved;
+          // Get background color from value (handle arrays if gradient)
+          const bgColor = Array.isArray(wp.backgroundValue)
+            ? wp.backgroundValue[0]
+            : wp.backgroundValue || '#96CEB4';
 
-        if (existingIndex >= 0) {
-          newSaved = [...savedWallpapers];
-          newSaved[existingIndex] = wallpaper;
-        } else {
-          newSaved = [wallpaper, ...savedWallpapers];
+          updateWidgetData({
+            quote: wp.quote,
+            mood: moodInfo?.name || wp.moodId,
+            moodEmoji: moodInfo?.emoji || '🌿',
+            textColor: wp.textColor || '#FFFFFF',
+            backgroundColor: bgColor as string,
+            wallpaperId: wp.id,
+            dailyQueue: queue as any[],
+          }).catch((err) => console.error('Widget sync failed:', err));
         }
+      };
 
-        set({ savedWallpapers: newSaved });
-        return id;
-      },
+      return {
+        currentWallpaper: {
+          ...DEFAULT_WALLPAPER,
+          backgroundValue: DEFAULT_GRADIENT,
+        },
+        savedWallpapers: [],
+        dailyQueue: [],
+        recentColors: [],
+        recentGradients: [],
 
-      deleteWallpaper: (id) => {
-        set((state) => ({
-          savedWallpapers: state.savedWallpapers.filter((w) => w.id !== id),
-          dailyQueue: state.dailyQueue.filter((qid) => qid !== id),
-        }));
-      },
+        createWallpaper: (moodId, quote) => {
+          const moodGradient = MOOD_DEFAULT_GRADIENTS[moodId] || DEFAULT_GRADIENT;
+          set({
+            currentWallpaper: {
+              ...DEFAULT_WALLPAPER,
+              id: Crypto.randomUUID(),
+              moodId,
+              quote,
+              backgroundValue: moodGradient,
+              createdAt: new Date().toISOString(),
+            },
+          });
+        },
 
-      toggleFavorite: (id) => {
-        set((state) => ({
-          savedWallpapers: state.savedWallpapers.map((w) =>
-            w.id === id ? { ...w, isFavorite: !w.isFavorite } : w
-          ),
-        }));
-      },
+        updateWallpaper: (updates) => {
+          set((state) => ({
+            currentWallpaper: { ...state.currentWallpaper, ...updates },
+          }));
+        },
 
-      addToDaily: (id) => {
-        set((state) => {
-          const wallpaper = state.savedWallpapers.find((w) => w.id === id);
-          if (!wallpaper) return state;
+        saveWallpaper: () => {
+          const { currentWallpaper, savedWallpapers } = get();
+          const id = currentWallpaper.id || Crypto.randomUUID();
+          const wallpaper = { ...currentWallpaper, id } as Wallpaper;
 
-          const newQueue = [...state.dailyQueue, id];
-          return {
-            dailyQueue: newQueue,
+          const existingIndex = savedWallpapers.findIndex((w) => w.id === id);
+          let newSaved;
+
+          if (existingIndex >= 0) {
+            newSaved = [...savedWallpapers];
+            newSaved[existingIndex] = wallpaper;
+          } else {
+            newSaved = [wallpaper, ...savedWallpapers];
+          }
+
+          set({ savedWallpapers: newSaved });
+          syncToWidget();
+          return id;
+        },
+
+        deleteWallpaper: (id) => {
+          set((state) => ({
+            savedWallpapers: state.savedWallpapers.filter((w) => w.id !== id),
+            dailyQueue: state.dailyQueue.filter((qid) => qid !== id),
+          }));
+          syncToWidget();
+        },
+
+        toggleFavorite: (id) => {
+          set((state) => ({
             savedWallpapers: state.savedWallpapers.map((w) =>
-              w.id === id ? { ...w, isDaily: true, dailyOrder: newQueue.length - 1 } : w
+              w.id === id ? { ...w, isFavorite: !w.isFavorite } : w
             ),
-          };
-        });
-      },
+          }));
+        },
 
-      removeFromDaily: (id) => {
-        set((state) => ({
-          dailyQueue: state.dailyQueue.filter((qid) => qid !== id),
-          savedWallpapers: state.savedWallpapers.map((w) =>
-            w.id === id ? { ...w, isDaily: false, dailyOrder: undefined } : w
-          ),
-        }));
-      },
+        addToDaily: (id) => {
+          set((state) => {
+            const wallpaper = state.savedWallpapers.find((w) => w.id === id);
+            if (!wallpaper) return state;
 
-      reorderDailyQueue: (ids) => {
-        set((state) => ({
-          dailyQueue: ids,
-          savedWallpapers: state.savedWallpapers.map((w, index) => ({
-            ...w,
-            dailyOrder: ids.indexOf(w.id),
-          })),
-        }));
-      },
+            const newQueue = [...state.dailyQueue, id];
+            return {
+              dailyQueue: newQueue,
+              savedWallpapers: state.savedWallpapers.map((w) =>
+                w.id === id ? { ...w, isDaily: true, dailyOrder: newQueue.length - 1 } : w
+              ),
+            };
+          });
+          syncToWidget();
+        },
 
-      loadWallpaper: (id) => {
-        const { savedWallpapers } = get();
-        const wallpaper = savedWallpapers.find((w) => w.id === id);
-        if (wallpaper) {
-          set({ currentWallpaper: wallpaper });
-        }
-      },
+        removeFromDaily: (id) => {
+          set((state) => ({
+            dailyQueue: state.dailyQueue.filter((qid) => qid !== id),
+            savedWallpapers: state.savedWallpapers.map((w) =>
+              w.id === id ? { ...w, isDaily: false, dailyOrder: undefined } : w
+            ),
+          }));
+          syncToWidget();
+        },
 
-      resetCurrent: () => {
-        set({ currentWallpaper: DEFAULT_WALLPAPER });
-      },
+        reorderDailyQueue: (ids) => {
+          set((state) => ({
+            dailyQueue: ids,
+            savedWallpapers: state.savedWallpapers.map((w) => ({
+              ...w,
+              dailyOrder: ids.indexOf(w.id),
+            })),
+          }));
+          syncToWidget();
+        },
 
-      addRecentColor: (color) => {
-        set((state) => {
-          const newRecent = [color, ...state.recentColors.filter((c) => c !== color)].slice(0, 10);
-          return { recentColors: newRecent };
-        });
-      },
+        loadWallpaper: (id) => {
+          const { savedWallpapers } = get();
+          const wallpaper = savedWallpapers.find((w) => w.id === id);
+          if (wallpaper) {
+            set({ currentWallpaper: wallpaper });
+          }
+        },
 
-      addRecentGradient: (gradient) => {
-        set((state) => {
-          const gradStr = JSON.stringify(gradient);
-          const newRecent = [
-            gradient,
-            ...state.recentGradients.filter((g) => JSON.stringify(g) !== gradStr),
-          ].slice(0, 10);
-          return { recentGradients: newRecent };
-        });
-      },
-    }),
+        resetCurrent: () => {
+          set({ currentWallpaper: DEFAULT_WALLPAPER });
+        },
+
+        addRecentColor: (color) => {
+          set((state) => {
+            const newRecent = [color, ...state.recentColors.filter((c) => c !== color)].slice(
+              0,
+              10
+            );
+            return { recentColors: newRecent };
+          });
+        },
+
+        addRecentGradient: (gradient) => {
+          set((state) => {
+            const gradStr = JSON.stringify(gradient);
+            const newRecent = [
+              gradient,
+              ...state.recentGradients.filter((g) => JSON.stringify(g) !== gradStr),
+            ].slice(0, 10);
+            return { recentGradients: newRecent };
+          });
+        },
+      };
+    },
     {
       name: 'wallpaper-storage',
       storage: createJSONStorage(() => AsyncStorage),

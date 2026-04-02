@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Aura - Quotes & Wallpapers",
-    "slug": "quotes-wallpaper",
+    "name": "I Am Aura - Quotes & Wallpapers",
+    "slug": "i-am-aura-quotes-wallpaper",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png"
@@ -15,7 +15,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#8FA998"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -32,7 +32,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#8FA998"
       },
       "package": "com.sureshbabudj.quoteswallpaper",
       "permissions": [
@@ -63,7 +63,8 @@
               ]
             }
           ],
-          "groupIdentifier": "group.com.yourcompany.iamwallpaper"
+          "groupIdentifier": "group.com.sureshbabudj.iamaura",
+          "bundleIdentifier": "com.sureshbabudj.quoteswallpaper.ExpoWidgetsTarget"
         }
       ],
       [
@@ -92,7 +93,7 @@
                   "bundleIdentifier": "com.sureshbabudj.quoteswallpaper.ExpoWidgetsTarget",
                   "entitlements": {
                     "com.apple.security.application-groups": [
-                      "group.com.yourcompany.iamwallpaper"
+                      "group.com.sureshbabudj.iamaura"
                     ]
                   }
                 }

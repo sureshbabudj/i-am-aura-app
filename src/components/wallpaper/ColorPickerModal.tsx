@@ -94,7 +94,7 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
             <Pressable
               onPress={() => onConfirm(tempHex)}
               className="flex-1 items-center justify-center rounded-xl bg-primary py-4 shadow-xl transition-transform active:scale-95">
-              <Text className="font-manrope text-sm font-bold text-white">Set Atmosphere</Text>
+              <Text className="font-manrope text-sm font-bold text-white">Set Color</Text>
             </Pressable>
           </View>
         </View>

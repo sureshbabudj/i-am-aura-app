@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { useWallpaperStore, DEFAULT_WALLPAPER } from '@/src/stores/wallpaperStore';
 
 import { MOOD_IMAGES } from '@/src/constants/images';
@@ -35,7 +35,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
   onSaveToLibrary,
   onClose,
 }) => {
-  const { currentWallpaper, updateWallpaper, addRecentColor, addRecentGradient } =
+  const { currentWallpaper, updateWallpaper, addRecentColor, addRecentGradient, saveWallpaper, addToDaily } =
     useWallpaperStore();
   const [activeTab, setActiveTab] = useState<Tab>('color');
   const insets = useSafeAreaInsets();
@@ -151,7 +151,16 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
       <View
         className="absolute bottom-0 left-0 right-0 flex-row gap-3 border-t border-outline-variant/70 bg-surface px-6 pb-8 pt-3"
         style={{ paddingBottom: Math.max(insets.bottom, 20) }}>
-        <Pressable className="flex-1 rounded-xl bg-secondary-container py-3 transition-colors hover:bg-secondary-container/80">
+        <Pressable
+          onPress={() => {
+            const id = saveWallpaper();
+            addToDaily(id);
+            Alert.alert(
+              'Daily Quote Set',
+              'This quote will now power your widgets and daily reflections!'
+            );
+          }}
+          className="flex-1 rounded-xl bg-secondary-container py-3 transition-colors hover:bg-secondary-container/80">
           <Text className="text-center font-manrope text-xs font-bold text-secondary">
             Set Daily Quote
           </Text>
