@@ -1,7 +1,7 @@
 import WidgetKit
 import SwiftUI
 
-struct AffirmationEntry: TimelineEntry {
+struct QuoteEntry: TimelineEntry {
   let date: Date
   let affirmation: String
   let mood: String
@@ -12,8 +12,8 @@ struct AffirmationEntry: TimelineEntry {
 }
 
 struct Provider: TimelineProvider {
-  func placeholder(in context: Context) -> AffirmationEntry {
-    AffirmationEntry(
+  func placeholder(in context: Context) -> QuoteEntry {
+    QuoteEntry(
       date: Date(),
       affirmation: "I am capable of amazing things",
       mood: "motivational",
@@ -24,13 +24,13 @@ struct Provider: TimelineProvider {
     )
   }
   
-  func getSnapshot(in context: Context, completion: @escaping (AffirmationEntry) -> Void) {
+  func getSnapshot(in context: Context, completion: @escaping (QuoteEntry) -> Void) {
     let entry = loadCurrentEntry()
     completion(entry)
   }
   
-  func getTimeline(in context: Context, completion: @escaping (Timeline<AffirmationEntry>) -> Void) {
-    var entries: [AffirmationEntry] = []
+  func getTimeline(in context: Context, completion: @escaping (Timeline<QuoteEntry>) -> Void) {
+    var entries: [QuoteEntry] = []
     let currentDate = Date()
     
     // Load saved data from App Group
@@ -40,7 +40,7 @@ struct Provider: TimelineProvider {
     if let schedule = defaults?.dictionary(forKey: "rotationSchedule") as? [String: Any],
        let enabled = schedule["enabled"] as? Bool,
        enabled,
-       let queue = defaults?.array(forKey: "dailyAffirmationQueue") as? [[String: Any]] {
+       let queue = defaults?.array(forKey: "dailyQuoteQueue") as? [[String: Any]] {
       
       // Create timeline entries based on rotation schedule
       let interval = schedule["interval"] as? Int ?? 4 // hours
@@ -50,7 +50,7 @@ struct Provider: TimelineProvider {
         let affirmation = item["affirmation"] as? String ?? "I am enough"
         let mood = item["mood"] as? String ?? "peaceful"
         
-        let entry = AffirmationEntry(
+        let entry = QuoteEntry(
           date: entryDate,
           affirmation: affirmation,
           mood: mood,
@@ -72,12 +72,12 @@ struct Provider: TimelineProvider {
     completion(timeline)
   }
   
-  private func loadCurrentEntry() -> AffirmationEntry {
+  private func loadCurrentEntry() -> QuoteEntry {
     let defaults = UserDefaults(suiteName: "group.com.yourcompany.iamwallpaper")
     
-    return AffirmationEntry(
+    return QuoteEntry(
       date: Date(),
-      affirmation: defaults?.string(forKey: "currentAffirmation") ?? "I am enough",
+      affirmation: defaults?.string(forKey: "currentQuote") ?? "I am enough",
       mood: defaults?.string(forKey: "currentMood") ?? "peaceful",
       moodEmoji: defaults?.string(forKey: "currentMoodEmoji") ?? "🌿",
       textColor: Color(hex: defaults?.string(forKey: "textColor") ?? "#FFFFFF"),
@@ -127,7 +127,7 @@ struct IAmWidgetEntryView: View {
 
 // Small Widget (Home Screen)
 struct SmallWidgetView: View {
-  let entry: AffirmationEntry
+  let entry: QuoteEntry
   
   var body: some View {
     ZStack {
@@ -147,7 +147,7 @@ struct SmallWidgetView: View {
         Text(entry.moodEmoji)
           .font(.system(size: 24))
         
-        // Affirmation text (truncated for small size)
+        // Quote text (truncated for small size)
         Text(entry.affirmation)
           .font(.system(size: 12, weight: .semibold, design: .rounded))
           .foregroundColor(entry.textColor)
@@ -162,7 +162,7 @@ struct SmallWidgetView: View {
 
 // Medium Widget (Home Screen)
 struct MediumWidgetView: View {
-  let entry: AffirmationEntry
+  let entry: QuoteEntry
   
   var body: some View {
     ZStack {
@@ -180,7 +180,7 @@ struct MediumWidgetView: View {
         }
         .frame(width: 60)
         
-        // Right side: Affirmation
+        // Right side: Quote
         VStack(alignment: .leading, spacing: 4) {
           Text("Today I am...")
             .font(.system(size: 11, weight: .medium))
@@ -204,7 +204,7 @@ struct MediumWidgetView: View {
 
 // Large Widget (Home Screen)
 struct LargeWidgetView: View {
-  let entry: AffirmationEntry
+  let entry: QuoteEntry
   
   var body: some View {
     ZStack {
@@ -252,7 +252,7 @@ struct LargeWidgetView: View {
 
 // Lock Screen Circular Widget
 struct LockScreenCircularView: View {
-  let entry: AffirmationEntry
+  let entry: QuoteEntry
   
   var body: some View {
     ZStack {
@@ -268,7 +268,7 @@ struct LockScreenCircularView: View {
 
 // Lock Screen Rectangular Widget
 struct LockScreenRectangularView: View {
-  let entry: AffirmationEntry
+  let entry: QuoteEntry
   
   var body: some View {
     HStack(spacing: 8) {
@@ -293,7 +293,7 @@ struct LockScreenRectangularView: View {
 
 // Lock Screen Inline Widget
 struct LockScreenInlineView: View {
-  let entry: AffirmationEntry
+  let entry: QuoteEntry
   
   var body: some View {
     HStack(spacing: 4) {
@@ -314,8 +314,8 @@ struct IAmWidget: Widget {
     StaticConfiguration(kind: kind, provider: Provider()) { entry in
       IAmWidgetEntryView(entry: entry)
     }
-    .configurationDisplayName("I Am Affirmations")
-    .description("Daily affirmations based on your mood")
+    .configurationDisplayName("I Am Quotes")
+    .description("Daily quotes based on your mood")
     .supportedFamilies([
       .systemSmall,
       .systemMedium,

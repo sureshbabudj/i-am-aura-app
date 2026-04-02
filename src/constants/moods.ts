@@ -8,7 +8,7 @@ export interface MoodConfig {
   icon: keyof typeof LucideIcons; // Lucide icon name
   color: string;
   gradient: readonly [string, string];
-  affirmations: readonly string[];
+  quotes: readonly string[];
 }
 
 export const MOODS = {
@@ -19,7 +19,7 @@ export const MOODS = {
     icon: 'Flame',
     color: colors['mood-energetic-primary'],
     gradient: [colors['mood-energetic-primary'], colors['mood-energetic-secondary']],
-    affirmations: [
+    quotes: [
       'I am capable of achieving anything I set my mind to',
       'I am stronger than any challenge I face',
       'I am creating my own success story',
@@ -34,7 +34,7 @@ export const MOODS = {
     icon: 'Heart',
     color: colors['mood-peaceful-primary'],
     gradient: [colors['mood-peaceful-primary'], colors['mood-peaceful-secondary']],
-    affirmations: [
+    quotes: [
       'I am deserving of deep, meaningful love',
       'I am open to giving and receiving love',
       'I am whole, and I attract wholeness',
@@ -48,7 +48,7 @@ export const MOODS = {
     icon: 'Leaf',
     color: colors['mood-calm-primary'],
     gradient: [colors['mood-calm-primary'], colors['mood-calm-secondary']],
-    affirmations: [
+    quotes: [
       'I am calm in the midst of chaos',
       'I am at peace with my journey',
       'I am breathing in serenity, exhaling stress',
@@ -62,7 +62,7 @@ export const MOODS = {
     icon: 'Target',
     color: colors['mood-focused-primary'],
     gradient: [colors['mood-focused-primary'], colors['mood-focused-secondary']],
-    affirmations: [
+    quotes: [
       'I am fully present in this moment',
       'I am laser-focused on my priorities',
       'I am eliminating distractions with ease',
@@ -76,7 +76,7 @@ export const MOODS = {
     icon: 'Star',
     color: colors['mood-confident-primary'],
     gradient: [colors['mood-confident-primary'], colors['mood-confident-secondary']],
-    affirmations: [
+    quotes: [
       'I am confident in my unique abilities',
       'I am enough exactly as I am',
       'I am radiating self-assurance',
@@ -90,7 +90,7 @@ export const MOODS = {
     icon: 'Sparkles',
     color: colors['mood-grateful-primary'],
     gradient: [colors['mood-grateful-primary'], colors['mood-grateful-secondary']],
-    affirmations: [
+    quotes: [
       'I am thankful for this beautiful life',
       'I am surrounded by abundance',
       'I am grateful for the lessons today brings',

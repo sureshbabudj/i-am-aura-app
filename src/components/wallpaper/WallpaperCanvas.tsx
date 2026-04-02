@@ -38,7 +38,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
     fontFamily = 'Inter-SemiBold',
   } = currentWallpaper;
 
-  const displayAffirmation = textStyle
+  const displayQuote = textStyle
     ? transformText(textContent || affirmation, textStyle as any)
     : textContent || affirmation;
 
@@ -193,7 +193,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
                   textAlign: textAlignment.horizontal as any,
                 },
               ]}>
-              {displayAffirmation}
+              {displayQuote}
             </Animated.Text>
           </Animated.View>
 

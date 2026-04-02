@@ -12,7 +12,7 @@ const STEPS = [
   {
     title: 'Pick your Mood',
     description:
-      "Whether you're feeling happy, focused, or need a little motivation, we have affirmations for every moment.",
+      "Whether you're feeling happy, focused, or need a little motivation, we have quotes for every moment.",
     icon: Heart,
     color: colors['primary-container'],
   },
@@ -26,7 +26,7 @@ const STEPS = [
   {
     title: 'Save & Share',
     description:
-      'Keep your affirmations in your gallery and set them as your daily wallpaper or widget background.',
+      'Keep your quotes in your gallery and set them as your daily wallpaper or widget background.',
     icon: Share,
     color: colors.secondary,
   },

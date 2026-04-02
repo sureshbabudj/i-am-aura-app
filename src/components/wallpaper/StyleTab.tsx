@@ -42,7 +42,7 @@ export const StyleThumb = ({
         className={`text-center font-manrope font-bold ${isFullWidth ? 'text-lg' : 'text-[14px]'} ${
           isSelected ? 'text-primary' : 'text-on-surface'
         }`}>
-        {styleKey ? transformText('Affirmation', styleKey as any) : 'Affirmation'}
+        {styleKey ? transformText('Quote', styleKey as any) : 'Quote'}
       </Text>
       <Text
         numberOfLines={1}

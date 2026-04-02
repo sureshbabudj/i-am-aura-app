@@ -21,7 +21,7 @@ import { colors } from '@/src/constants/colors';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export default function AffirmationSelectionScreen() {
+export default function QuoteSelectionScreen() {
   const { mood } = useLocalSearchParams<{ mood: MoodId }>();
   const router = useRouter();
   const { createWallpaper } = useWallpaperStore();
@@ -46,10 +46,10 @@ export default function AffirmationSelectionScreen() {
     if (!moodConfig) return [];
 
     const categoryQuotes = (groupedQuotes as any)[mood as string] || [];
-    const baseAffirmations = moodConfig.affirmations.map((text) => ({ quote: text }));
+    const baseQuotes = moodConfig.quotes.map((text) => ({ quote: text }));
 
     // Combine and shuffle
-    const combined = [...baseAffirmations, ...categoryQuotes];
+    const combined = [...baseQuotes, ...categoryQuotes];
     return combined.sort(() => Math.random() - 0.5);
   }, [mood, moodConfig]);
 
@@ -66,7 +66,7 @@ export default function AffirmationSelectionScreen() {
     );
   }
 
-  const handleSelectAffirmation = (text: string) => {
+  const handleSelectQuote = (text: string) => {
     createWallpaper(mood, text);
     router.push('/create/new');
   };
@@ -97,7 +97,7 @@ export default function AffirmationSelectionScreen() {
       {/* Select Button Overlay */}
       <View style={{ bottom: insets.bottom + 40 }} className="absolute w-full items-center">
         <Pressable
-          onPress={() => handleSelectAffirmation(item.quote)}
+          onPress={() => handleSelectQuote(item.quote)}
           style={{ backgroundColor: moodConfig.color }}
           className="flex-row items-center gap-3 rounded-full px-10 py-5 shadow-xl shadow-black/20 transition-transform active:scale-95">
           <Text className="font-manrope text-lg font-bold tracking-wide text-white">Use Quote</Text>
@@ -137,7 +137,7 @@ export default function AffirmationSelectionScreen() {
             {moodConfig.name}
           </Text>
           <Text className="font-manrope text-[10px] uppercase tracking-widest text-primary opacity-60">
-            Quotes & Affirmations
+            Quotes
           </Text>
         </View>
         <View className="w-12" />

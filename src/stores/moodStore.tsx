@@ -10,13 +10,13 @@ interface MoodState {
 
   // Stats
   moodUsageCount: Record<MoodId, number>;
-  favoriteAffirmations: Record<string, string[]>; // moodId -> affirmation indices
+  favoriteQuotes: Record<string, string[]>; // moodId -> affirmation indices
 
   // Actions
   setSelectedMood: (moodId: MoodId | null) => void;
   markMoodUsed: (moodId: MoodId) => void;
-  toggleFavoriteAffirmation: (moodId: MoodId, affirmationIndex: number) => void;
-  isAffirmationFavorite: (moodId: MoodId, affirmationIndex: number) => boolean;
+  toggleFavoriteQuote: (moodId: MoodId, affirmationIndex: number) => void;
+  isQuoteFavorite: (moodId: MoodId, affirmationIndex: number) => boolean;
   getRecommendedMood: () => MoodId;
   getMoodStats: () => { mostUsed: MoodId | null; totalCreations: number };
 }
@@ -29,7 +29,7 @@ export const useMoodStore = create<MoodState>()(
       selectedMood: null,
       recentlyUsed: [],
       moodUsageCount: {} as Record<MoodId, number>,
-      favoriteAffirmations: {},
+      favoriteQuotes: {},
 
       setSelectedMood: (moodId) => {
         set({ selectedMood: moodId });
@@ -57,9 +57,9 @@ export const useMoodStore = create<MoodState>()(
         });
       },
 
-      toggleFavoriteAffirmation: (moodId, affirmationIndex) => {
+      toggleFavoriteQuote: (moodId, affirmationIndex) => {
         set((state) => {
-          const current = state.favoriteAffirmations[moodId] || [];
+          const current = state.favoriteQuotes[moodId] || [];
           const exists = current.includes(String(affirmationIndex));
 
           let updated: string[];
@@ -70,17 +70,17 @@ export const useMoodStore = create<MoodState>()(
           }
 
           return {
-            favoriteAffirmations: {
-              ...state.favoriteAffirmations,
+            favoriteQuotes: {
+              ...state.favoriteQuotes,
               [moodId]: updated,
             },
           };
         });
       },
 
-      isAffirmationFavorite: (moodId, affirmationIndex) => {
+      isQuoteFavorite: (moodId, affirmationIndex) => {
         const state = get();
-        const favorites = state.favoriteAffirmations[moodId] || [];
+        const favorites = state.favoriteQuotes[moodId] || [];
         return favorites.includes(String(affirmationIndex));
       },
 

@@ -7,15 +7,18 @@ import {
   Alert,
   Dimensions,
   StyleSheet,
+  Platform,
+  ActionSheetIOS,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { X, Settings2 } from 'lucide-react-native';
+import { X, Settings2, Share2, Save } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 import { WallpaperCanvas } from '@/src/components/wallpaper/WallpaperCanvas';
 import { CustomizerControls } from '@/src/components/wallpaper/CustomizerControls';
 import { colors } from '@/src/constants/colors';
 import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 import ViewShot from 'react-native-view-shot';
 import Animated, {
   useSharedValue,
@@ -118,6 +121,40 @@ export default function CustomizeScreen() {
     router.replace('/(tabs)/library');
   };
 
+  const handleShare = async () => {
+    try {
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options: ['Cancel', 'Share', 'Save to Gallery'],
+            cancelButtonIndex: 0,
+          },
+          async (buttonIndex) => {
+            if (buttonIndex === 1) {
+              const uri = await viewShotRef.current?.capture?.();
+              if (uri) {
+                await Sharing.shareAsync(uri);
+              }
+            } else if (buttonIndex === 2) {
+              await handleSaveToGallery(); // Call existing gallery function
+            }
+          }
+        );
+      } else {
+        // Share API which natively opens a modal on Android/others
+        const uri = await viewShotRef.current?.capture?.();
+        if (uri) {
+          await Sharing.shareAsync(uri, {
+            dialogTitle: 'Share or save your quote',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      Alert.alert('Error', 'Failed to share wallpaper.');
+    }
+  };
+
   if (!currentWallpaper.affirmation) {
     return (
       <View className="flex-1 items-center justify-center bg-surface">
@@ -148,7 +185,7 @@ export default function CustomizeScreen() {
               textShadowOffset: { width: 0, height: 2 },
               textShadowRadius: 10,
             }}>
-            I Am
+            Aura
           </Text>
           <Text
             className={`font-manrope text-[10px] uppercase tracking-widest ${isControlsVisible ? 'text-on-surface-variant' : 'text-white/80'}`}>
@@ -156,14 +193,19 @@ export default function CustomizeScreen() {
           </Text>
         </View>
 
-        <Pressable
-          onPress={handleSave}
-          className={`rounded-full px-6 py-2 shadow-lg active:scale-95 ${isControlsVisible ? 'bg-primary' : 'bg-white'}`}>
-          <Text
-            className={`font-manrope text-sm font-bold ${isControlsVisible ? 'text-white' : 'text-primary'}`}>
-            Save
-          </Text>
-        </Pressable>
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={handleSave}
+            className={`rounded-full p-3 shadow-sm active:scale-95 ${isControlsVisible ? 'bg-primary' : 'bg-white'}`}>
+            <Save size={20} color={isControlsVisible ? colors['on-primary'] : colors.primary} />
+          </Pressable>
+
+          <Pressable
+            onPress={handleShare}
+            className={`rounded-full p-3 shadow-sm active:scale-95 ${isControlsVisible ? 'bg-primary' : 'bg-white'}`}>
+            <Share2 size={20} color={isControlsVisible ? colors['on-primary'] : colors.primary} />
+          </Pressable>
+        </View>
       </View>
 
       {/* Main Canvas with Animation */}

@@ -23,7 +23,7 @@ export default function SettingsScreen() {
   const renderSettingItem = (icon: any, label: string, value?: string, onPress?: () => void) => (
     <Pressable
       onPress={onPress}
-      className="mb-2 flex-row items-center justify-between rounded-2xl border border-outline-variant bg-surface-container-low p-4 active:bg-surface-container">
+      className="mb-2 flex-row items-center justify-between rounded-2xl border border-outline-variant/30 bg-surface-container-low p-4 active:bg-surface-container">
       <View className="flex-row items-center">
         <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-surface-container">
           {React.createElement(icon, { size: 20, color: colors['on-surface-variant'] })}
@@ -88,7 +88,7 @@ export default function SettingsScreen() {
                 [{ text: 'Cancel' }, { text: 'Reset', style: 'destructive' }]
               )
             }
-            className="flex-row items-center rounded-2xl border border-error/20 bg-surface-container-low p-4 active:bg-surface-container">
+            className="flex-row items-center rounded-2xl border border-error/10 bg-error-container/30 p-4 active:bg-surface-container">
             <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-error/10">
               <Trash2 size={20} color={colors.error} />
             </View>
@@ -97,7 +97,7 @@ export default function SettingsScreen() {
 
           <View className="items-center py-10">
             <Text className="font-manrope text-xs uppercase tracking-tighter text-on-surface-variant">
-              I Am - Mood Affirmations
+              Aura - Mood Quotes
             </Text>
             <Text className="mt-1 font-manrope text-[10px] text-surface-variant">
               Version 1.0.0

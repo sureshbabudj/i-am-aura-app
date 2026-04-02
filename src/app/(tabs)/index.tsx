@@ -1,30 +1,20 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import {
-  Menu,
-  User,
-  Heart,
-  Share2,
-  Clover,
-  HandFist,
-  HeartHandshake,
-  Focus,
-  BicepsFlexed,
-} from 'lucide-react-native';
+import { Heart, Clover, HandFist, HeartHandshake, Focus, BicepsFlexed } from 'lucide-react-native';
 import { MoodId } from '@/src/constants/moods';
 import { useMoodStore } from '@/src/stores/moodStore';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/src/constants/colors';
 import { RandomQuote } from '@/src/components/quote/RandomQuote';
+import { Header } from '@/src/components/common/Header';
 
 const MOOD_UI = [
   {
     id: 'motivational',
     label: 'Motivational',
     icon: BicepsFlexed,
-    bg: 'bg-primary-container/10',
-    color: colors['primary-container'],
+    bg: 'bg-primary-container/40',
+    color: colors['on-primary-container'],
     shape: {
       borderTopLeftRadius: 90,
       borderTopRightRadius: 80,
@@ -36,7 +26,7 @@ const MOOD_UI = [
     id: 'romantic',
     label: 'Romantic',
     icon: Heart,
-    bg: 'bg-on-error-container/10',
+    bg: 'bg-on-error-container/5',
     color: colors['on-error-container'],
     shape: {
       borderTopLeftRadius: 86,
@@ -49,8 +39,8 @@ const MOOD_UI = [
     id: 'peaceful',
     label: 'Peaceful',
     icon: Clover,
-    bg: 'bg-tertiary-container/15',
-    color: colors['tertiary-container'],
+    bg: 'bg-tertiary-container/50',
+    color: colors['on-tertiary-container'],
     shape: {
       borderTopLeftRadius: 80,
       borderTopRightRadius: 90,
@@ -75,8 +65,8 @@ const MOOD_UI = [
     id: 'grateful',
     label: 'empathy',
     icon: HeartHandshake,
-    bg: 'bg-primary-container/20',
-    color: colors['primary-container'],
+    bg: 'bg-surface-variant/50',
+    color: colors['on-surface-variant'],
     shape: {
       borderTopLeftRadius: 80,
       borderTopRightRadius: 95,
@@ -102,7 +92,6 @@ const MOOD_UI = [
 export default function HomeScreen() {
   const router = useRouter();
   const { setSelectedMood } = useMoodStore();
-  const insets = useSafeAreaInsets();
 
   const handleMoodSelect = (moodId: MoodId) => {
     setSelectedMood(moodId);
@@ -114,52 +103,13 @@ export default function HomeScreen() {
       <StatusBar style="dark" />
 
       {/* Header */}
-      <View
-        style={{ paddingTop: insets.top }}
-        className="z-40 w-full flex-row items-center justify-between bg-surface px-6 py-4">
-        <Pressable className="text-primary active:scale-95">
-          <Menu size={24} color={colors.primary} />
-        </Pressable>
-        <Text className="font-noto-serif-italic text-2xl text-primary">I Am</Text>
-        <Pressable
-          onPress={() => router.push('/settings')}
-          className="text-primary active:scale-95">
-          <User size={24} color={colors.primary} />
-        </Pressable>
-      </View>
+      <Header />
 
       <ScrollView
         className="flex-1 px-6 pt-4"
         contentContainerClassName="pb-32"
         showsVerticalScrollIndicator={false}>
-        {/* Today's Affirmation Promo */}
-        <View className="mb-10 mt-4">
-          <View className="mb-4">
-            <Text className="font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant opacity-70">
-              Today&apos;s Affirmation
-            </Text>
-          </View>
-          <View className="min-h-[300px] items-center justify-center rounded-[2rem] bg-surface-container-lowest p-8 text-center shadow">
-            <View className="relative z-10 items-center">
-              <RandomQuote />
-
-              <View className="mt-8 flex-row items-center justify-center gap-6">
-                <Pressable className="flex-row items-center gap-2 active:opacity-70">
-                  <Heart size={18} color={colors.primary} />
-                  <Text className="font-manrope text-[10px] font-semibold uppercase tracking-widest text-primary">
-                    Save
-                  </Text>
-                </Pressable>
-                <Pressable className="flex-row items-center gap-2 active:opacity-70">
-                  <Share2 size={18} color={colors.primary} />
-                  <Text className="font-manrope text-[10px] font-semibold uppercase tracking-widest text-primary">
-                    Share
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        </View>
+        <RandomQuote />
 
         {/* Moods Section */}
         <View className="mb-6">
@@ -198,11 +148,11 @@ export default function HomeScreen() {
         </View>
 
         {/* Journaling / Daily Widget Teaser */}
-        <View className="mb-12 flex-col justify-between rounded-3xl border border-transparent bg-surface-container-low p-6">
+        <View className="mb-12 flex-col justify-between rounded-3xl border border-transparent bg-surface-container p-6">
           <View>
             <Text className="mb-2 font-noto-serif text-2xl text-on-surface">Daily Reflection</Text>
             <Text className="pr-4 font-manrope text-sm text-on-surface-variant">
-              Set up daily rotations to get fresh affirmations on your widget throughout the day.
+              Set up daily rotations to get fresh quotes on your widget throughout the day.
             </Text>
           </View>
           <Pressable

@@ -144,8 +144,8 @@ export default function DailyScreen() {
               No active affirmation
             </Text>
             <Text className="mb-8 text-center font-manrope text-on-surface-variant">
-              Select one of your saved affirmations and mark it as &quot;Daily&quot; to see it here
-              and in your widgets.
+              Select one of your saved quotes and mark it as &quot;Daily&quot; to see it here and in
+              your widgets.
             </Text>
             <Pressable
               onPress={() => router.push('/(tabs)/library')}

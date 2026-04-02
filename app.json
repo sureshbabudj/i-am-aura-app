@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "I Am - Mood Affirmations & Wallpapers",
-    "slug": "affirmations-wallpaper",
+    "name": "Aura - Quotes & Wallpapers",
+    "slug": "quotes-wallpaper",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png"
@@ -22,7 +22,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sureshbabudj.affirmationswallpaper",
+      "bundleIdentifier": "com.sureshbabudj.quoteswallpaper",
       "buildNumber": "1.0.0",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Save wallpapers to your photo library",
@@ -34,7 +34,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.sureshbabudj.affirmationswallpaper",
+      "package": "com.sureshbabudj.quoteswallpaper",
       "permissions": [
         "WRITE_EXTERNAL_STORAGE",
         "READ_EXTERNAL_STORAGE"
@@ -50,9 +50,9 @@
         {
           "widgets": [
             {
-              "name": "IAmWidget",
-              "displayName": "I Am Affirmations",
-              "description": "Daily mood-based affirmations",
+              "name": "AuraWidget",
+              "displayName": "Aura Quotes",
+              "description": "Daily mood-based quotes",
               "supportedFamilies": [
                 "systemSmall",
                 "systemMedium",
@@ -89,7 +89,7 @@
               "appExtensions": [
                 {
                   "targetName": "ExpoWidgetsTarget",
-                  "bundleIdentifier": "com.sureshbabudj.affirmationswallpaper.ExpoWidgetsTarget",
+                  "bundleIdentifier": "com.sureshbabudj.quoteswallpaper.ExpoWidgetsTarget",
                   "entitlements": {
                     "com.apple.security.application-groups": [
                       "group.com.yourcompany.iamwallpaper"

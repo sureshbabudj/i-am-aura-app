@@ -153,7 +153,7 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
         style={{ paddingBottom: Math.max(insets.bottom, 20) }}>
         <Pressable className="flex-1 rounded-xl bg-secondary-container py-3 transition-colors hover:bg-secondary-container/80">
           <Text className="text-center font-manrope text-xs font-bold text-secondary">
-            Set Daily Affirmation
+            Set Daily Quote
           </Text>
         </Pressable>
         <Pressable
