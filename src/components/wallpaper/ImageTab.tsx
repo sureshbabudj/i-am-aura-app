@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Ban, Grid } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import Slider from '@react-native-community/slider';
@@ -11,13 +11,36 @@ interface ImageTabProps {
   onShowMore: () => void;
 }
 
+const MoodImage = React.memo(
+  ({ url, isSelected, onPress }: { url: string; isSelected: boolean; onPress: () => void }) => (
+    <Pressable
+      onPress={onPress}
+      style={{
+        width: 80,
+        aspectRatio: 0.8,
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: colors['surface-container-low'],
+        position: 'relative',
+        borderWidth: isSelected ? 2 : 0,
+        borderColor: isSelected ? colors.primary : 'transparent',
+      }}>
+      <Image
+        source={{ uri: url }}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+      />
+    </Pressable>
+  )
+);
+
 export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
   const { currentWallpaper, updateWallpaper } = useWallpaperStore();
 
   const allImages = React.useMemo(() => {
     const images = MOOD_IMAGES[currentWallpaper.moodId!] || [];
-    // Simple deterministic shuffle based on moodId to keep it stable during render
-    // but random enough for variety
+    // Seeded shuffle to keep it random but stable for the current mood
     return [...images].sort(() => 0.5 - Math.random());
   }, [currentWallpaper.moodId]);
 
@@ -36,41 +59,42 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
             onPress={() =>
               updateWallpaper({ backgroundType: 'color', backgroundValue: colors.black })
             }
-            className="flex w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-outline-variant bg-surface-container-lowest"
-            style={{ aspectRatio: 4 / 5 }}>
+            style={{
+              width: 80,
+              aspectRatio: 0.8,
+              borderRadius: 12,
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderWidth: 1,
+              borderStyle: 'dashed',
+              borderColor: colors['outline-variant'],
+              backgroundColor: colors['surface-container-lowest'],
+            }}>
             <Ban size={24} color={colors['on-surface-variant']} />
             <Text className="mt-2 font-manrope text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
               None
             </Text>
           </Pressable>
 
-          {allImages.slice(0, 7).map((url) => {
-            const isSelected = currentWallpaper.backgroundValue === url;
-            return (
-              <Pressable
-                key={url}
-                onPress={() => {
-                  updateWallpaper({ backgroundType: 'image', backgroundValue: url });
-                }}
-                className={`relative w-20 shrink-0 overflow-hidden rounded-xl ${
-                  isSelected ? 'border-2 border-primary' : 'bg-surface-container-low'
-                }`}
-                style={{ aspectRatio: 4 / 5 }}>
-                <Image
-                  source={{ uri: url }}
-                  style={{ width: '100%', height: '100%' }}
-                  contentFit="cover"
-                  transition={200}
-                  cachePolicy="memory-disk"
-                />
-              </Pressable>
-            );
-          })}
+          {allImages.slice(0, 7).map((url) => (
+            <MoodImage
+              key={url}
+              url={url}
+              isSelected={currentWallpaper.backgroundValue === url}
+              onPress={() => updateWallpaper({ backgroundType: 'image', backgroundValue: url })}
+            />
+          ))}
 
           <Pressable
             onPress={onShowMore}
-            className="flex w-20 shrink-0 items-center justify-center rounded-xl bg-surface-container transition-colors hover:bg-surface-container-high"
-            style={{ aspectRatio: 4 / 5 }}>
+            style={{
+              width: 80,
+              aspectRatio: 0.8,
+              borderRadius: 12,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: colors['surface-container'],
+            }}>
             <Grid size={24} color={colors['on-surface-variant']} />
             <Text className="mt-2 font-manrope text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
               More
@@ -80,9 +104,14 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
       </View>
 
       <View>
-        <Text className="mb-2 font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant/60">
-          Opacity
-        </Text>
+        <View className="mb-2 flex-row items-center justify-between">
+          <Text className="font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant/60">
+            Opacity
+          </Text>
+          <Text className="font-manrope text-[10px] font-bold text-primary">
+            {Math.round((currentWallpaper.imageOpacity ?? 1) * 100)}%
+          </Text>
+        </View>
         <Slider
           style={{ width: '100%', height: 40 }}
           minimumValue={0}
@@ -91,13 +120,19 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
           onValueChange={(val) => updateWallpaper({ imageOpacity: val })}
           minimumTrackTintColor={colors.primary}
           maximumTrackTintColor={colors['outline-variant']}
+          thumbTintColor={colors.primary}
         />
       </View>
 
       <View>
-        <Text className="mb-2 font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant/60">
-          Saturation
-        </Text>
+        <View className="mb-2 flex-row items-center justify-between">
+          <Text className="font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant/60">
+            Saturation
+          </Text>
+          <Text className="font-manrope text-[10px] font-bold text-primary">
+            {Math.round((currentWallpaper.imageSaturation ?? 1) * 100)}%
+          </Text>
+        </View>
         <Slider
           style={{ width: '100%', height: 40 }}
           minimumValue={0}
@@ -106,6 +141,7 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
           onValueChange={(val) => updateWallpaper({ imageSaturation: val })}
           minimumTrackTintColor={colors.primary}
           maximumTrackTintColor={colors['outline-variant']}
+          thumbTintColor={colors.primary}
         />
       </View>
     </View>

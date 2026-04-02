@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Modal } from 'react-native';
+import { View, Text, ScrollView, Pressable, Modal, StyleSheet } from 'react-native';
 import { X } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { colors } from '@/src/constants/colors';
@@ -36,11 +36,12 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
           </Pressable>
         </View>
         <ScrollView
+          className="h-full w-full"
           contentContainerStyle={{
             padding: 24,
-            gap: 16,
             flexDirection: 'row',
             flexWrap: 'wrap',
+            justifyContent: 'space-between',
           }}>
           {images.map((url, i) => {
             // Swap small thumbs for regular thumbs in modal
@@ -54,15 +55,22 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
               <Pressable
                 key={'allimg' + i}
                 onPress={() => onSelect(url)}
-                className={`w-[47%] overflow-hidden rounded-xl bg-surface-container-low ${
-                  isSelected ? 'border-2 border-primary' : ''
-                }`}
-                style={{ aspectRatio: 4 / 5 }}>
+                style={{
+                  width: '48%',
+                  height: 200,
+                  aspectRatio: 0.8,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  backgroundColor: colors['surface-container-low'],
+                  position: 'relative',
+                  borderWidth: isSelected ? 2 : 0,
+                  borderColor: isSelected ? colors.primary : 'transparent',
+                  marginBottom: 16,
+                }}>
                 <Image
                   source={{ uri: modalUrl }}
-                  style={{ width: '100%', height: '100%' }}
+                  style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
                   contentFit="cover"
-                  transition={200}
                   cachePolicy="memory-disk"
                 />
               </Pressable>
