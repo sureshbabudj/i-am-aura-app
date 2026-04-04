@@ -2,6 +2,7 @@
   "expo": {
     "name": "I Am Aura - Quotes & Wallpapers",
     "slug": "affirmations-wallpaper",
+    "scheme": "iamaura",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png"
@@ -22,12 +23,18 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sureshbabudj.quoteswallpaper",
+      "bundleIdentifier": "com.sureshbabudj.iamaura",
+      "appleTeamId": "AVSVKZW6N8",
       "buildNumber": "1.0.0",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Save wallpapers to your photo library",
         "NSUserTrackingUsageDescription": "Track widget usage for improvements",
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.sureshbabudj.iamaura"
+        ]
       }
     },
     "android": {
@@ -35,39 +42,18 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#8FA998"
       },
-      "package": "com.sureshbabudj.quoteswallpaper",
+      "package": "com.sureshbabudj.iamaura",
       "permissions": [
         "WRITE_EXTERNAL_STORAGE",
         "READ_EXTERNAL_STORAGE"
       ]
     },
     "plugins": [
+      "@bacons/apple-targets",
       "expo-router",
       "expo-font",
       "expo-sharing",
       "expo-secure-store",
-      [
-        "expo-widgets",
-        {
-          "widgets": [
-            {
-              "name": "AuraWidget",
-              "displayName": "Aura Quotes",
-              "description": "Daily mood-based quotes",
-              "supportedFamilies": [
-                "systemSmall",
-                "systemMedium",
-                "systemLarge",
-                "accessoryCircular",
-                "accessoryRectangular",
-                "accessoryInline"
-              ]
-            }
-          ],
-          "groupIdentifier": "group.com.sureshbabudj.iamaura",
-          "bundleIdentifier": "com.sureshbabudj.quoteswallpaper.ExpoWidgetsTarget"
-        }
-      ],
       [
         "expo-build-properties",
         {
@@ -85,23 +71,6 @@
         "origin": false
       },
       "eas": {
-        "build": {
-          "experimental": {
-            "ios": {
-              "appExtensions": [
-                {
-                  "targetName": "ExpoWidgetsTarget",
-                  "bundleIdentifier": "com.sureshbabudj.quoteswallpaper.ExpoWidgetsTarget",
-                  "entitlements": {
-                    "com.apple.security.application-groups": [
-                      "group.com.sureshbabudj.iamaura"
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        },
         "projectId": "4e6cc06e-9e2a-417d-91a2-1beeb954875d"
       }
     }
