@@ -10,31 +10,36 @@ struct WallpaperProvider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> WallpaperEntry {
-        await loadCurrentEntry() ?? .sample
+        let entry = await loadCurrentEntry() ?? .sample
+        return entry
     }
     
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<WallpaperEntry> {
         let entry = await loadCurrentEntry() ?? .sample
-        return Timeline(entries: [entry], policy: .atEnd)
+        
+        // We set the date to NOW so that the system sees this as a fresh entry every time
+        let timelineEntry = WallpaperEntry(date: Date(), wallpaper: entry.wallpaper)
+        
+        return Timeline(entries: [timelineEntry], policy: .atEnd)
     }
 
     private func loadCurrentEntry() async -> WallpaperEntry? {
-        let defaults = UserDefaults(suiteName: "group.com.sureshbabudj.iamaura")
+        let groupId = "group.com.sureshbabudj.iamaura"
+        let defaults = UserDefaults(suiteName: groupId)
         
-        // ExtensionStorage stores Records as dictionaries in UserDefaults
-        if let dict = defaults?.dictionary(forKey: "currentWallpaper"),
-           let id = dict["id"] as? String,
-           let moodName = dict["moodName"] as? String,
-           let moodEmoji = dict["moodEmoji"] as? String {
-            
-            let metadata = WallpaperMetadata(
-                id: id,
-                moodEmoji: moodEmoji,
-                moodName: moodName
-            )
-            return WallpaperEntry(date: Date(), wallpaper: metadata)
+        guard let dict = defaults?.dictionary(forKey: "currentWallpaper") else {
+            return nil
         }
         
-        return nil
+        let metadata = WallpaperMetadata(
+            id: dict["id"] as? String ?? "unknown",
+            moodEmoji: dict["moodEmoji"] as? String ?? "🌿",
+            moodName: dict["moodName"] as? String ?? "Aura",
+            smallFilename: dict["smallFilename"] as? String,
+            mediumFilename: dict["mediumFilename"] as? String,
+            largeFilename: dict["largeFilename"] as? String
+        )
+        
+        return WallpaperEntry(date: Date(), wallpaper: metadata)
     }
 }

@@ -45,11 +45,11 @@ export const AppPaywallModal: React.FC<{ visible: boolean; onClose: () => void }
       <View style={{ flex: 1 }}>
         <RevenueCatUI.Paywall
           onPurchaseCompleted={() => {
-            console.log('Purchase completed!');
+            console.log('[REVENUECAT_TEST] Purchase completed!');
             onClose();
           }}
           onRestoreCompleted={() => {
-            console.log('Restore completed!');
+            console.log('[REVENUECAT_TEST] Restore completed!');
             onClose();
           }}
           onDismiss={() => onClose()}

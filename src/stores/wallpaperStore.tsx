@@ -4,7 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { colors, DEFAULT_GRADIENT } from '../constants/colors';
 import { MOODS, MoodId } from '../constants/moods';
-import { ExtensionStorage } from '@bacons/apple-targets';
+// eslint-disable-next-line import/no-unresolved
+import * as AuraBridge from 'aura-bridge';
 
 export type BackgroundType = 'color' | 'gradient' | 'image' | 'pattern';
 
@@ -52,6 +53,11 @@ export interface Wallpaper {
   isFavorite: boolean;
   isDaily: boolean;
   dailyOrder?: number;
+
+  // Widget Snapshots
+  smallFilename?: string;
+  mediumFilename?: string;
+  largeFilename?: string;
 }
 
 interface WallpaperState {
@@ -85,6 +91,16 @@ interface WallpaperState {
   recentGradients: string[][];
   addRecentColor: (color: string) => void;
   addRecentGradient: (gradient: string[]) => void;
+}
+
+interface WallPaperEntry {
+  id: string;
+  moodId: string;
+  moodName: string;
+  moodEmoji: string;
+  smallFilename: string | null;
+  mediumFilename: string | null;
+  largeFilename: string | null;
 }
 
 export const DEFAULT_WALLPAPER: Partial<Wallpaper> = {
@@ -128,24 +144,37 @@ export const useWallpaperStore = create<WallpaperState>()(
         if (currentWp) {
           const mapToSwiftMetadata = (wp: Wallpaper) => {
             const moodInfo = MOODS[wp.moodId as MoodId];
-            return {
+            const data: WallPaperEntry = {
               id: wp.id,
               moodId: wp.moodId,
               moodName: moodInfo?.name || wp.moodId,
               moodEmoji: moodInfo?.emoji || '🌿',
+              smallFilename: null,
+              mediumFilename: null,
+              largeFilename: null,
             };
+
+            if (wp.smallFilename) data.smallFilename = wp.smallFilename;
+            if (wp.mediumFilename) data.mediumFilename = wp.mediumFilename;
+            if (wp.largeFilename) data.largeFilename = wp.largeFilename;
+
+            return data;
           };
 
           // 2. Map only essential metadata for the current wallpaper
-          const metadata = mapToSwiftMetadata(currentWp);
+          const metadata: WallPaperEntry = mapToSwiftMetadata(currentWp);
 
-          // 3. Update via ExtensionStorage (Official module)
-          const storage = new ExtensionStorage('group.com.sureshbabudj.iamaura');
-          storage.set('currentWallpaper', metadata);
-          console.log('currentWallpaper', metadata);
+          // 3. Update via Custom AuraBridge (Direct UserDefaults access)
+          const groupId = 'group.com.sureshbabudj.iamaura';
+          const sharedKey = 'currentWallpaper';
+          
+          console.log('[WIDGET_SYNC] Store writing via AuraBridge...', metadata);
+          AuraBridge.setSharedData(groupId, sharedKey, metadata);
 
           // 4. Force widget refresh
-          ExtensionStorage.reloadWidget();
+          setTimeout(() => {
+            AuraBridge.reloadWidget();
+          }, 500);
         }
       };
 

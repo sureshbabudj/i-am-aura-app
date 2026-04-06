@@ -17,9 +17,5 @@
     "src",
     "ios",
     "expo-module.config.json"
-  ],
-  "dependencies": {},
-  "devDependencies": {
-    "expo-module-scripts": "^4.1.7"
-  }
+  ]
 }

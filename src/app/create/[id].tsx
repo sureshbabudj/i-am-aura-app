@@ -23,8 +23,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import ViewShot from 'react-native-view-shot';
 // eslint-disable-next-line import/no-unresolved
-import { getAppGroupPath } from 'aura-bridge';
-import { ExtensionStorage } from '@bacons/apple-targets';
+import * as AuraBridge from 'aura-bridge';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -34,7 +33,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSubscriptionStore } from '@/src/stores/subscriptionStore';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 /**
  * CUSTOMIZE SCREEN - With Ghost Renderer for Widgets
@@ -42,7 +41,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export default function CustomizeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { currentWallpaper, saveWallpaper, loadWallpaper } = useWallpaperStore();
+  const { currentWallpaper, saveWallpaper, loadWallpaper, updateWallpaper } = useWallpaperStore();
   const { incrementSaveCount } = useSubscriptionStore();
   const insets = useSafeAreaInsets();
 
@@ -93,50 +92,59 @@ export default function CustomizeScreen() {
   }, [id, loadWallpaper]);
 
   const performWidgetSync = async () => {
-    console.log('--- WIDGET SYNC START ---');
+    console.log('[WIDGET_SYNC] START');
     try {
-      const groupPath = getAppGroupPath();
-      console.log('App Group Path:', groupPath);
+      const groupPath = AuraBridge.getAppGroupPath();
+      console.log('[WIDGET_SYNC] App Group Path:', groupPath);
 
       if (groupPath) {
-        console.log('3. Refs Status:', {
-          small: !!smallShotRef.current,
-          medium: !!mediumShotRef.current,
-          large: !!largeShotRef.current,
-        });
-
+        const timestamp = Date.now();
         const snapshots = [
-          { ref: smallShotRef, name: 'small_widget.png' },
-          { ref: mediumShotRef, name: 'medium_widget.png' },
-          { ref: largeShotRef, name: 'large_widget.png' },
+          { ref: smallShotRef, name: `small_${timestamp}.png`, key: 'smallFilename' },
+          { ref: mediumShotRef, name: `medium_${timestamp}.png`, key: 'mediumFilename' },
+          { ref: largeShotRef, name: `large_${timestamp}.png`, key: 'largeFilename' },
         ];
+
+        const filenames: any = {};
 
         for (const shot of snapshots) {
           try {
             await new Promise((resolve) => setTimeout(resolve, 300));
             const uri = await shot.ref.current?.capture?.();
             if (uri) {
-              console.log(`Captured ${shot.name}:`, uri);
+              console.log(`[WIDGET SYNC] Captured ${shot.name}:`, uri);
               const dest = `file://${groupPath}/${shot.name}`;
               await FileSystem.copyAsync({ from: uri, to: dest });
-              const info = await FileSystem.getInfoAsync(dest);
-              console.log(`Verified ${shot.name} at ${dest}:`, info.exists);
+              filenames[shot.key] = shot.name;
             }
           } catch (err) {
             console.error(`Error capturing/copying ${shot.name}:`, err);
           }
         }
 
-        // Sync Metadata
+        // Update store with these filenames so they persist and sync correctly
+        updateWallpaper(filenames);
+
+        // Sync Metadata with individual filenames
         const moodInfo = MOODS[currentWallpaper.moodId as MoodId];
-        const storage = new ExtensionStorage('group.com.sureshbabudj.iamaura');
-        storage.set('currentWallpaper', {
+        const sharedKey = 'currentWallpaper';
+        const groupId = 'group.com.sureshbabudj.iamaura';
+
+        const metadata = {
           id: currentWallpaper.id || '',
           moodId: currentWallpaper.moodId || '',
           moodName: moodInfo?.name || '',
           moodEmoji: moodInfo?.emoji || '',
-        });
-        ExtensionStorage.reloadWidget();
+          ...filenames,
+        };
+
+        console.log('[WIDGET_SYNC] Writing via AuraBridge...', metadata);
+        AuraBridge.setSharedData(groupId, sharedKey, metadata);
+
+        setTimeout(() => {
+          console.log('[WIDGET_SYNC] Reloading widget via AuraBridge...');
+          AuraBridge.reloadWidget();
+        }, 1000);
       }
     } catch (error) {
       console.error('Widget Sync Error:', error);
@@ -154,8 +162,8 @@ export default function CustomizeScreen() {
         await MediaLibrary.saveToLibraryAsync(uri);
 
         // Also sync widget for consistency
-        saveWallpaper();
         await performWidgetSync();
+        saveWallpaper();
 
         Alert.alert('Success', 'Wallpaper saved and widget updated!');
       }
@@ -171,9 +179,14 @@ export default function CustomizeScreen() {
     if (saving) return;
     setSaving(true);
     try {
-      console.log('--- SAVE PROCESS START ---');
-      saveWallpaper();
+      console.log('[WIDGET_SYNC] --- SAVE PROCESS START ---');
+
+      // 1. Capture and Sync Widget Images first
       await performWidgetSync();
+
+      // 2. Now save to the store (it will now include filenames from our sync)
+      saveWallpaper();
+
       Alert.alert('Success', 'Design saved and widget updated!');
       router.replace('/(tabs)/library');
     } catch (error) {
@@ -266,7 +279,7 @@ export default function CustomizeScreen() {
 
       {/* Main Canvas with Animation */}
       <Animated.View style={[{ flex: 1 }, animatedCanvasStyle]}>
-        <WallpaperCanvas ref={viewShotRef as any} />
+        <WallpaperCanvas ref={viewShotRef as any} size="full" />
       </Animated.View>
 
       {/* Customize Toggle */}
@@ -298,39 +311,34 @@ export default function CustomizeScreen() {
         />
       </Animated.View>
 
-      {/* --- GHOST RENDERERS (Hidden but mounted for capture) --- */}
-      <View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          opacity: 0.1,
-          zIndex: -1,
-          left: 0,
-          top: 0,
-          width: 1,
-          height: 1,
-          overflow: 'visible',
-        }}>
-        {/* Small Widget Capture - 1:1 Aspect */}
-        <ViewShot ref={smallShotRef} options={{ format: 'png', quality: 1 }}>
-          <View collapsable={false} style={{ width: 600, height: 600 }}>
-            <WallpaperCanvas skipViewShot />
-          </View>
-        </ViewShot>
+      {/* Hidden capture containers */}
+      <View style={{ position: 'absolute', left: -5000, top: 0, flexDirection: 'row' }} pointerEvents="none">
+        {/* Small Widget Capture - 158x158 */}
+        <View style={{ width: 158, height: 158, overflow: 'hidden' }}>
+          <ViewShot ref={smallShotRef} options={{ format: 'png', quality: 1 }} style={{ width: 158, height: 158 }}>
+            <View collapsable={false} style={{ width: 158, height: 158 }}>
+              <WallpaperCanvas skipViewShot size="small" />
+            </View>
+          </ViewShot>
+        </View>
 
-        {/* Medium Widget Capture - 2:1 Aspect */}
-        <ViewShot ref={mediumShotRef} options={{ format: 'png', quality: 1 }}>
-          <View collapsable={false} style={{ width: 1200, height: 600 }}>
-            <WallpaperCanvas skipViewShot />
-          </View>
-        </ViewShot>
+        {/* Medium Widget Capture - 338x158 */}
+        <View style={{ width: 338, height: 158, overflow: 'hidden' }}>
+          <ViewShot ref={mediumShotRef} options={{ format: 'png', quality: 1 }} style={{ width: 338, height: 158 }}>
+            <View collapsable={false} style={{ width: 338, height: 158 }}>
+              <WallpaperCanvas skipViewShot size="medium" />
+            </View>
+          </ViewShot>
+        </View>
 
-        {/* Large Widget Capture - 1:1 Large */}
-        <ViewShot ref={largeShotRef} options={{ format: 'png', quality: 1 }}>
-          <View collapsable={false} style={{ width: 1000, height: 1000 }}>
-            <WallpaperCanvas skipViewShot />
-          </View>
-        </ViewShot>
+        {/* Large Widget Capture - 338x354 */}
+        <View style={{ width: 338, height: 354, overflow: 'hidden' }}>
+          <ViewShot ref={largeShotRef} options={{ format: 'png', quality: 1 }} style={{ width: 338, height: 354 }}>
+            <View collapsable={false} style={{ width: 338, height: 354 }}>
+              <WallpaperCanvas skipViewShot size="large" />
+            </View>
+          </ViewShot>
+        </View>
       </View>
     </View>
   );

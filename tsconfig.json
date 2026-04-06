@@ -8,7 +8,7 @@
         "*"
       ],
       "aura-bridge": [
-        "modules/widget-bridge"
+        "modules/aura-bridge/src/index.ts"
       ]
     }
   }

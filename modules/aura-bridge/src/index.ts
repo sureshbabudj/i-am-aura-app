@@ -12,3 +12,11 @@ const bridge = (() => {
 export const getAppGroupPath = (): string | null => {
   return bridge?.getAppGroupPath?.() || null;
 };
+
+export const setSharedData = (groupId: string, key: string, data: any): void => {
+  bridge?.setSharedData?.(groupId, key, data);
+};
+
+export const reloadWidget = (): void => {
+  bridge?.reloadWidget?.();
+};

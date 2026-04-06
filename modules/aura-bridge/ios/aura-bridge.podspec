@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name           = 'widget-bridge'
+  s.name           = 'aura-bridge'
   s.version        = '1.0.0'
   s.summary        = 'Minimal native bridge for Aura shared storage path retrieval.'
   s.description    = 'Minimal native bridge for Aura shared storage path retrieval.'

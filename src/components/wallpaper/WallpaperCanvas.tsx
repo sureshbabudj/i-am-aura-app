@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Dimensions, StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SvgXml } from 'react-native-svg';
@@ -21,6 +20,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface WallpaperCanvasProps {
   skipViewShot?: boolean;
+  size?: 'small' | 'medium' | 'large' | 'full';
 }
 
 export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>((props, ref) => {
@@ -102,10 +102,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>(
           <View style={StyleSheet.absoluteFill}>
             <Image
               source={{ uri: imageUrl }}
-              style={[
-                StyleSheet.absoluteFill,
-                { opacity: imageOpacity ?? 1 },
-              ]}
+              style={[StyleSheet.absoluteFill, { opacity: imageOpacity ?? 1 }]}
               contentFit="cover"
               transition={300}
               placeholderContentFit="cover"
@@ -153,77 +150,124 @@ export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>(
     return renderPattern(patternConfig, 'overlayPattern');
   };
 
+  const getScalingFactor = () => {
+    switch (props.size) {
+      case 'small':
+        return 0.45; // ~158/390
+      case 'medium':
+        return 0.45;
+      case 'large':
+        return 0.8;
+      default:
+        return 1.0;
+    }
+  };
+
+  const getCanvasStyle = () => {
+    switch (props.size) {
+      case 'small':
+        return styles.smallCanvas;
+      case 'medium':
+        return styles.mediumCanvas;
+      case 'large':
+        return styles.largeCanvas;
+      default:
+        return styles.canvas;
+    }
+  };
+
+  const scaleFactor = getScalingFactor();
+  const adjustedTextSize = textSize * scaleFactor;
+  const paddingSize = 40 * scaleFactor;
+
   const content = (
-    <View style={styles.canvas}>
-      <View style={StyleSheet.absoluteFill}>
-        {renderBackground()}
-        {renderPatternOverlay()}
-        <Animated.View
+    <View style={getCanvasStyle()}>
+      {renderBackground()}
+      {renderPatternOverlay()}
+      <Animated.View
+        style={[
+          styles.textContainer,
+          {
+            padding: paddingSize,
+            justifyContent:
+              textAlignment.vertical === 'top'
+                ? 'flex-start'
+                : textAlignment.vertical === 'bottom'
+                  ? 'flex-end'
+                  : 'center',
+            alignItems:
+              textAlignment.horizontal === 'left'
+                ? 'flex-start'
+                : textAlignment.horizontal === 'right'
+                  ? 'flex-end'
+                  : 'center',
+          },
+          animatedTextStyle,
+        ]}>
+        <Animated.Text
+          numberOfLines={6}
+          adjustsFontSizeToFit
           style={[
-            styles.textContainer,
+            styles.quoteText,
             {
-              justifyContent:
-                textAlignment.vertical === 'top'
-                  ? 'flex-start'
-                  : textAlignment.vertical === 'bottom'
-                    ? 'flex-end'
-                    : 'center',
-              alignItems:
-                textAlignment.horizontal === 'left'
-                  ? 'flex-start'
-                  : textAlignment.horizontal === 'right'
-                    ? 'flex-end'
-                    : 'center',
+              color: textColor,
+              fontSize: adjustedTextSize,
+              lineHeight: Math.round(adjustedTextSize * 1.3),
+              opacity: textOpacity,
+              fontFamily: fontFamily,
+              textAlign: textAlignment.horizontal as any,
             },
-            animatedTextStyle,
           ]}>
-          <Animated.Text
-            style={[
-              styles.quoteText,
-              {
-                color: textColor,
-                fontSize: textSize,
-                lineHeight: Math.round(textSize * 1.4),
-                opacity: textOpacity,
-                fontFamily: fontFamily,
-                textAlign: textAlignment.horizontal as any,
-              },
-            ]}>
-            {displayQuote}
-          </Animated.Text>
-        </Animated.View>
-        <View style={styles.vignette} pointerEvents="none" />
-      </View>
+          {displayQuote}
+        </Animated.Text>
+      </Animated.View>
+      <View style={styles.vignette} pointerEvents="none" />
     </View>
   );
 
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <View style={styles.canvasContainer}>
       {props.skipViewShot ? (
         content
       ) : (
-        <ViewShot ref={ref} style={styles.canvas} options={{ format: 'jpg', quality: 0.9 }}>
+        <ViewShot ref={ref} style={getCanvasStyle()} options={{ format: 'png', quality: 1 }}>
           {content}
         </ViewShot>
       )}
-    </GestureHandlerRootView>
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    height: '100%',
+  canvasContainer: {
+    overflow: 'hidden',
   },
   canvas: {
-    width: '100%',
-    height: '100%',
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
     position: 'relative',
     overflow: 'hidden',
   },
   textContainer: {
     ...StyleSheet.absoluteFill,
-    padding: 40,
+  },
+  smallCanvas: {
+    width: 158,
+    height: 158,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  mediumCanvas: {
+    width: 338,
+    height: 158,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  largeCanvas: {
+    width: 338,
+    height: 354,
+    position: 'relative',
+    overflow: 'hidden',
   },
   quoteText: {
     fontWeight: '600',

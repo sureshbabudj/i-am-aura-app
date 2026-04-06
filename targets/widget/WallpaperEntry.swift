@@ -11,6 +11,9 @@ struct WallpaperMetadata: Codable {
     let id: String
     let moodEmoji: String
     let moodName: String
+    let smallFilename: String?
+    let mediumFilename: String?
+    let largeFilename: String?
 }
 
 // MARK: - Sample Data
@@ -18,7 +21,10 @@ extension WallpaperMetadata {
     static let sample = WallpaperMetadata(
         id: "active_wallpaper",
         moodEmoji: "🌿",
-        moodName: "Peaceful"
+        moodName: "Peaceful",
+        smallFilename: nil,
+        mediumFilename: nil,
+        largeFilename: nil
     )
 }
 
