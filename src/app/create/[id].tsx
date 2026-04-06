@@ -235,54 +235,54 @@ export default function CustomizeScreen() {
     <View className="flex-1 bg-surface">
       <StatusBar style={isControlsVisible ? 'dark' : 'light'} />
 
-      {/* Header Overlay */}
-      <View
-        style={{ paddingTop: insets.top + 10 }}
-        className="pointer-events-auto absolute left-0 right-0 top-0 z-20 flex-row items-center justify-between px-8 py-4">
-        <Pressable
-          onPress={() => router.back()}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-black/10 backdrop-blur-md active:scale-90">
-          <X size={24} color={isControlsVisible ? colors.black : colors.white} />
-        </Pressable>
+      {/* Main Canvas - Tap to toggle controls */}
+      <Pressable onPress={() => toggleControls(!isControlsVisible)} className="flex-1">
+        <Animated.View style={[{ flex: 1 }, animatedCanvasStyle]}>
+          <WallpaperCanvas ref={viewShotRef as any} size="full" />
+        </Animated.View>
+      </Pressable>
 
-        <View className="flex-col items-center">
-          <Text
-            className={`font-noto-serif-italic text-2xl tracking-tight ${isControlsVisible ? 'text-on-surface' : 'text-white'}`}>
-            Aura
-          </Text>
-          <Text
-            className={`font-manrope text-[10px] uppercase tracking-widest ${isControlsVisible ? 'text-on-surface-variant' : 'text-white/80'}`}>
-            Personalize
-          </Text>
-        </View>
-
-        <View className="flex-row items-center gap-3">
+      {/* Header Overlay - Hidden in Controls Mode */}
+      {!isControlsVisible && (
+        <View
+          style={{ paddingTop: insets.top + 10 }}
+          className="pointer-events-auto absolute left-0 right-0 top-0 z-20 flex-row items-center justify-between px-8 py-4">
           <Pressable
-            onPress={handleSave}
-            className={`rounded-full p-3 shadow-sm active:scale-95 ${isControlsVisible ? 'bg-primary' : 'bg-white'}`}>
-            <Save size={20} color={isControlsVisible ? colors['on-primary'] : colors.primary} />
+            onPress={() => router.back()}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-black/10 backdrop-blur-md active:scale-90">
+            <X size={24} color={colors.white} />
           </Pressable>
-          <Pressable
-            onPress={handleShare}
-            className={`rounded-full p-3 shadow-sm active:scale-95 ${isControlsVisible ? 'bg-primary' : 'bg-white'}`}>
-            <Share2 size={20} color={isControlsVisible ? colors['on-primary'] : colors.primary} />
-          </Pressable>
+
+          <View className="flex-col items-center">
+            <Text className="font-noto-serif-italic text-2xl tracking-tight text-white">Aura</Text>
+            <Text className="font-manrope text-[10px] uppercase tracking-widest text-white/80">
+              Personalize
+            </Text>
+          </View>
+
+          <View className="flex-row items-center gap-3">
+            <Pressable
+              onPress={handleSave}
+              className="rounded-full bg-white p-3 shadow-sm active:scale-95">
+              <Save size={20} color={colors.primary} />
+            </Pressable>
+            <Pressable
+              onPress={handleShare}
+              className="rounded-full bg-white p-3 shadow-sm active:scale-95">
+              <Share2 size={20} color={colors.primary} />
+            </Pressable>
+          </View>
         </View>
-      </View>
+      )}
 
-      {/* Main Canvas with Animation */}
-      <Animated.View style={[{ flex: 1 }, animatedCanvasStyle]}>
-        <WallpaperCanvas ref={viewShotRef as any} size="full" />
-      </Animated.View>
-
-      {/* Customize Toggle */}
+      {/* Customize Toggle - Floating Button (Hidden in Controls Mode) */}
       {!isControlsVisible && (
         <View
           pointerEvents="box-none"
           className="absolute bottom-12 left-0 right-0 z-30 flex-row justify-center">
           <Pressable
             onPress={() => toggleControls(true)}
-            className="flex-row items-center gap-3 rounded-full bg-white/90 px-6 py-4 shadow-2xl backdrop-blur-xl active:scale-95">
+            className="flex-row items-center gap-3 rounded-full border border-white/20 bg-white/90 px-6 py-4 shadow-2xl backdrop-blur-xl active:scale-95">
             <Settings2 size={20} color={colors.primary} strokeWidth={2.5} />
             <Text className="font-manrope text-sm font-bold uppercase tracking-widest text-primary">
               Customize
@@ -291,17 +291,12 @@ export default function CustomizeScreen() {
         </View>
       )}
 
-      {/* Controls Container */}
+      {/* Controls Container - Bottom Sheet */}
       <Animated.View
         pointerEvents="box-none"
         style={[StyleSheet.absoluteFill, animatedControlsStyle]}
         className="z-40 justify-end">
-        <CustomizerControls
-          onApply={handleSaveToGallery}
-          isApplying={saving}
-          onSaveToLibrary={handleSave}
-          onClose={() => toggleControls(false)}
-        />
+        <CustomizerControls onClose={() => toggleControls(false)} />
       </Animated.View>
 
       {/* Hidden capture containers */}

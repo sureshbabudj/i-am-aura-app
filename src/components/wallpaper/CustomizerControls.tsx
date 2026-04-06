@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useWallpaperStore, DEFAULT_WALLPAPER } from '@/src/stores/wallpaperStore';
 
 import { MOOD_IMAGES } from '@/src/constants/images';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X } from 'lucide-react-native';
 import { colors } from '@/src/constants/colors';
 
@@ -21,24 +20,17 @@ import { StyleSelectionModal } from './StyleSelectionModal';
 import { Tab } from '@/src/types';
 
 interface CustomizerControlsProps {
-  onApply?: () => void;
-  isApplying?: boolean;
-  onSaveToLibrary?: () => void;
   onClose: () => void;
 }
 
 const DEFAULT_GRADIENT = [colors['mood-energetic-primary'], colors['mood-energetic-secondary']];
 
 export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
-  onApply,
-  isApplying,
-  onSaveToLibrary,
   onClose,
 }) => {
-  const { currentWallpaper, updateWallpaper, addRecentColor, addRecentGradient, saveWallpaper, addToDaily } =
+  const { currentWallpaper, updateWallpaper, addRecentColor, addRecentGradient } =
     useWallpaperStore();
   const [activeTab, setActiveTab] = useState<Tab>('color');
-  const insets = useSafeAreaInsets();
 
   // Modals state
   const [isImagesModalOpen, setIsImagesModalOpen] = useState(false);
@@ -146,47 +138,6 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
         {activeTab === 'text' && <TextTab onPickColor={setColorPickerTarget} />}
         {activeTab === 'style' && <StyleTab onShowMore={() => setIsStylesModalOpen(true)} />}
       </ScrollView>
-
-      {/* Sticky Primary Actions */}
-      <View
-        className="absolute bottom-0 left-0 right-0 flex-row gap-3 border-t border-outline-variant/70 bg-surface px-6 pb-8 pt-3"
-        style={{ paddingBottom: Math.max(insets.bottom, 20) }}>
-        <Pressable
-          onPress={() => {
-            const id = saveWallpaper();
-            addToDaily(id);
-            Alert.alert(
-              'Daily Quote Set',
-              'This quote will now power your widgets and daily reflections!'
-            );
-          }}
-          className="flex-1 rounded-xl bg-secondary-container py-3 transition-colors hover:bg-secondary-container/80">
-          <Text className="text-center font-manrope text-xs font-bold text-secondary">
-            Set Daily Quote
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation();
-            onApply?.();
-          }}
-          disabled={isApplying}
-          className="flex-1 rounded-xl bg-primary py-3 shadow-xl transition-all active:scale-[0.98]"
-          style={{
-            shadowColor: colors.primary,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 10,
-          }}>
-          {isApplying ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text className="text-center font-manrope text-sm font-bold text-white">
-              Apply as Wallpaper
-            </Text>
-          )}
-        </Pressable>
-      </View>
 
       {/* MODALS */}
       <ColorPickerModal
