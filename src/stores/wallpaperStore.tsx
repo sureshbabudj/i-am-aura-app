@@ -138,11 +138,12 @@ export const useWallpaperStore = create<WallpaperState>()(
 
           // 2. Map only essential metadata for the current wallpaper
           const metadata = mapToSwiftMetadata(currentWp);
-          
+
           // 3. Update via ExtensionStorage (Official module)
-          const storage = new ExtensionStorage("group.com.sureshbabudj.iamaura");
-          storage.set("currentWallpaper", metadata);
-          
+          const storage = new ExtensionStorage('group.com.sureshbabudj.iamaura');
+          storage.set('currentWallpaper', metadata);
+          console.log('currentWallpaper', metadata);
+
           // 4. Force widget refresh
           ExtensionStorage.reloadWidget();
         }

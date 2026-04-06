@@ -1,10 +1,25 @@
 {
-  "name": "widget-bridge",
+  "name": "aura-bridge",
   "version": "1.0.0",
   "description": "Minimal native bridge for Aura shared storage path retrieval.",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "expo": {
-    "name": "widget-bridge",
-    "slug": "widget-bridge"
+    "name": "aura-bridge",
+    "slug": "aura-bridge"
+  },
+  "platforms": ["ios"],
+  "ios": {
+    "modules": [
+      "WidgetBridgeModule"
+    ]
+  },
+  "files": [
+    "src",
+    "ios",
+    "expo-module.config.json"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "expo-module-scripts": "^4.1.7"
   }
 }

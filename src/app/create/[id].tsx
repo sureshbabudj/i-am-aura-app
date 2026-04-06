@@ -20,9 +20,10 @@ import { colors } from '@/src/constants/colors';
 import { MOODS, MoodId } from '@/src/constants/moods';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import ViewShot from 'react-native-view-shot';
-import { getAppGroupPath } from 'widget-bridge';
+// eslint-disable-next-line import/no-unresolved
+import { getAppGroupPath } from 'aura-bridge';
 import { ExtensionStorage } from '@bacons/apple-targets';
 import Animated, {
   useSharedValue,
@@ -91,26 +92,72 @@ export default function CustomizeScreen() {
     }
   }, [id, loadWallpaper]);
 
+  const performWidgetSync = async () => {
+    console.log('--- WIDGET SYNC START ---');
+    try {
+      const groupPath = getAppGroupPath();
+      console.log('App Group Path:', groupPath);
+
+      if (groupPath) {
+        console.log('3. Refs Status:', {
+          small: !!smallShotRef.current,
+          medium: !!mediumShotRef.current,
+          large: !!largeShotRef.current,
+        });
+
+        const snapshots = [
+          { ref: smallShotRef, name: 'small_widget.png' },
+          { ref: mediumShotRef, name: 'medium_widget.png' },
+          { ref: largeShotRef, name: 'large_widget.png' },
+        ];
+
+        for (const shot of snapshots) {
+          try {
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            const uri = await shot.ref.current?.capture?.();
+            if (uri) {
+              console.log(`Captured ${shot.name}:`, uri);
+              const dest = `file://${groupPath}/${shot.name}`;
+              await FileSystem.copyAsync({ from: uri, to: dest });
+              const info = await FileSystem.getInfoAsync(dest);
+              console.log(`Verified ${shot.name} at ${dest}:`, info.exists);
+            }
+          } catch (err) {
+            console.error(`Error capturing/copying ${shot.name}:`, err);
+          }
+        }
+
+        // Sync Metadata
+        const moodInfo = MOODS[currentWallpaper.moodId as MoodId];
+        const storage = new ExtensionStorage('group.com.sureshbabudj.iamaura');
+        storage.set('currentWallpaper', {
+          id: currentWallpaper.id || '',
+          moodId: currentWallpaper.moodId || '',
+          moodName: moodInfo?.name || '',
+          moodEmoji: moodInfo?.emoji || '',
+        });
+        ExtensionStorage.reloadWidget();
+      }
+    } catch (error) {
+      console.error('Widget Sync Error:', error);
+    }
+  };
+
   const handleSaveToGallery = async () => {
     if (saving) return;
-    
-    // Check daily save limit
     if (!incrementSaveCount()) return;
 
     try {
       setSaving(true);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'We need permission to save to gallery.');
-        return;
-      }
-
       const uri = await viewShotRef.current?.capture?.();
       if (uri) {
         await MediaLibrary.saveToLibraryAsync(uri);
-        Alert.alert('Success', 'Wallpaper saved to gallery!');
+
+        // Also sync widget for consistency
+        saveWallpaper();
+        await performWidgetSync();
+
+        Alert.alert('Success', 'Wallpaper saved and widget updated!');
       }
     } catch (error) {
       console.error('Gallery save error:', error);
@@ -122,68 +169,16 @@ export default function CustomizeScreen() {
 
   const handleSave = async () => {
     if (saving) return;
-
-    // Check daily save limit
-    if (!incrementSaveCount()) return;
-
     setSaving(true);
-
     try {
-      // 1. Save locally
-      const savedId = saveWallpaper();
-
-      // 2. Ghost Renderer Sync
-      const groupPath = getAppGroupPath();
-      console.log('--- WIDGET SYNC START ---');
-      console.log('App Group Path:', groupPath);
-
-      if (groupPath) {
-        const snapshots = [
-          { ref: smallShotRef, name: 'small_widget.png' },
-          { ref: mediumShotRef, name: 'medium_widget.png' },
-          { ref: largeShotRef, name: 'large_widget.png' },
-        ];
-
-        for (const shot of snapshots) {
-          try {
-            // Give time for each off-screen renderer to mount/draw
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            const uri = await shot.ref.current?.capture?.();
-            console.log(`Captured ${shot.name}:`, uri);
-            
-            if (uri) {
-              const dest = `file://${groupPath}/${shot.name}`;
-              await FileSystem.copyAsync({
-                from: uri,
-                to: dest,
-              });
-              
-              // Verify copy
-              const info = await FileSystem.getInfoAsync(dest);
-              console.log(`Verified ${shot.name} at ${dest}:`, info.exists);
-            }
-          } catch (err) {
-            console.error(`Error capturing/copying ${shot.name}:`, err);
-          }
-        }
-
-        const moodInfo = MOODS[currentWallpaper.moodId as MoodId];
-        const storage = new ExtensionStorage("group.com.sureshbabudj.iamaura");
-        storage.set("currentWallpaper", {
-          id: savedId,
-          moodId: currentWallpaper.moodId || '',
-          moodName: moodInfo?.name || '',
-          moodEmoji: moodInfo?.emoji || '',
-        });
-        
-        ExtensionStorage.reloadWidget();
-      }
-
+      console.log('--- SAVE PROCESS START ---');
+      saveWallpaper();
+      await performWidgetSync();
+      Alert.alert('Success', 'Design saved and widget updated!');
       router.replace('/(tabs)/library');
     } catch (error) {
-      console.error('Widget Sync Error:', error);
-      Alert.alert('Save Error', 'We saved your design, but the widget preview might not update.');
+      console.error('Save Error:', error);
+      Alert.alert('Save Error', 'We saved your design, but the widget might not update.');
     } finally {
       setSaving(false);
     }
@@ -304,17 +299,17 @@ export default function CustomizeScreen() {
       </Animated.View>
 
       {/* --- GHOST RENDERERS (Hidden but mounted for capture) --- */}
-      <View 
+      <View
         pointerEvents="none"
-        style={{ 
-          position: 'absolute', 
-          opacity: 0.1, 
-          zIndex: -1, 
-          left: 0, 
-          top: 0, 
-          width: 1, 
+        style={{
+          position: 'absolute',
+          opacity: 0.1,
+          zIndex: -1,
+          left: 0,
+          top: 0,
+          width: 1,
           height: 1,
-          overflow: 'visible' 
+          overflow: 'visible',
         }}>
         {/* Small Widget Capture - 1:1 Aspect */}
         <ViewShot ref={smallShotRef} options={{ format: 'png', quality: 1 }}>

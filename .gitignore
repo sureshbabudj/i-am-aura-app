@@ -13,8 +13,8 @@ web-build/
 .env*
 
 
-ios
-android
+/ios
+/android
 
 # macOS
 .DS_Store

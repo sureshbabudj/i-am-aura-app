@@ -3,7 +3,8 @@ import { requireNativeModule } from 'expo-modules-core';
 const bridge = (() => {
   try {
     return requireNativeModule('WidgetBridge');
-  } catch {
+  } catch (e) {
+    console.error('Failed to load WidgetBridge module:', e);
     return null;
   }
 })();
