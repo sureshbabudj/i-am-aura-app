@@ -19,7 +19,11 @@ import {
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
+interface WallpaperCanvasProps {
+  skipViewShot?: boolean;
+}
+
+export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>((props, ref) => {
   const { currentWallpaper } = useWallpaperStore();
 
   const {
@@ -100,9 +104,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
               source={{ uri: imageUrl }}
               style={[
                 StyleSheet.absoluteFill,
-                {
-                  opacity: imageOpacity ?? 1,
-                },
+                { opacity: imageOpacity ?? 1 },
               ]}
               contentFit="cover"
               transition={300}
@@ -151,64 +153,67 @@ export const WallpaperCanvas = React.forwardRef<ViewShot>((props, ref) => {
     return renderPattern(patternConfig, 'overlayPattern');
   };
 
+  const content = (
+    <View style={styles.canvas}>
+      <View style={StyleSheet.absoluteFill}>
+        {renderBackground()}
+        {renderPatternOverlay()}
+        <Animated.View
+          style={[
+            styles.textContainer,
+            {
+              justifyContent:
+                textAlignment.vertical === 'top'
+                  ? 'flex-start'
+                  : textAlignment.vertical === 'bottom'
+                    ? 'flex-end'
+                    : 'center',
+              alignItems:
+                textAlignment.horizontal === 'left'
+                  ? 'flex-start'
+                  : textAlignment.horizontal === 'right'
+                    ? 'flex-end'
+                    : 'center',
+            },
+            animatedTextStyle,
+          ]}>
+          <Animated.Text
+            style={[
+              styles.quoteText,
+              {
+                color: textColor,
+                fontSize: textSize,
+                lineHeight: Math.round(textSize * 1.4),
+                opacity: textOpacity,
+                fontFamily: fontFamily,
+                textAlign: textAlignment.horizontal as any,
+              },
+            ]}>
+            {displayQuote}
+          </Animated.Text>
+        </Animated.View>
+        <View style={styles.vignette} pointerEvents="none" />
+      </View>
+    </View>
+  );
+
   return (
     <GestureHandlerRootView style={styles.container}>
-      <ViewShot ref={ref} style={styles.canvas} options={{ format: 'jpg', quality: 0.9 }}>
-        <View style={StyleSheet.absoluteFill}>
-          {/* Base Background */}
-          {renderBackground()}
-
-          {/* Pattern Overlay (if not using pattern as base) */}
-          {renderPatternOverlay()}
-
-          {/* Text Layer */}
-          <Animated.View
-            style={[
-              styles.textContainer,
-              {
-                justifyContent:
-                  textAlignment.vertical === 'top'
-                    ? 'flex-start'
-                    : textAlignment.vertical === 'bottom'
-                      ? 'flex-end'
-                      : 'center',
-                alignItems:
-                  textAlignment.horizontal === 'left'
-                    ? 'flex-start'
-                    : textAlignment.horizontal === 'right'
-                      ? 'flex-end'
-                      : 'center',
-              },
-              animatedTextStyle,
-            ]}>
-            <Animated.Text
-              style={[
-                styles.quoteText,
-                {
-                  color: textColor,
-                  fontSize: textSize,
-                  lineHeight: Math.round(textSize * 1.4),
-                  opacity: textOpacity,
-                  fontFamily: fontFamily,
-                  textAlign: textAlignment.horizontal as any,
-                },
-              ]}>
-              {displayQuote}
-            </Animated.Text>
-          </Animated.View>
-
-          {/* Vignette Overlay for depth */}
-          <View style={styles.vignette} pointerEvents="none" />
-        </View>
-      </ViewShot>
+      {props.skipViewShot ? (
+        content
+      ) : (
+        <ViewShot ref={ref} style={styles.canvas} options={{ format: 'jpg', quality: 0.9 }}>
+          {content}
+        </ViewShot>
+      )}
     </GestureHandlerRootView>
   );
 });
 
 const styles = StyleSheet.create({
   container: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    width: '100%',
+    height: '100%',
   },
   canvas: {
     width: '100%',

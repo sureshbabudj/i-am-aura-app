@@ -1,12 +1,19 @@
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Heart, Clover, HandFist, HeartHandshake, Focus, BicepsFlexed } from 'lucide-react-native';
+import Animated, { 
+  useAnimatedScrollHandler, 
+  useSharedValue 
+} from 'react-native-reanimated';
 import { MoodId } from '@/src/constants/moods';
 import { useMoodStore } from '@/src/stores/moodStore';
 import { colors } from '@/src/constants/colors';
 import { RandomQuote } from '@/src/components/quote/RandomQuote';
 import { Header } from '@/src/components/common/Header';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect } from 'react';
+import { useSubscriptionStore } from '@/src/stores/subscriptionStore';
 
 const MOOD_UI = [
   {
@@ -91,9 +98,42 @@ const MOOD_UI = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { setSelectedMood } = useMoodStore();
 
+  const headerVisible = useSharedValue(true);
+  const prevScrollY = useSharedValue(0);
+  const { checkTrialStatus } = useSubscriptionStore();
+
+  useEffect(() => {
+    // Check if trial has expired on mount
+    checkTrialStatus();
+  }, [checkTrialStatus]);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const currentScrollY = event.contentOffset.y;
+      
+      // If at top, always show
+      if (currentScrollY <= 50) {
+        headerVisible.value = true;
+      } else {
+        // Hide on scroll down, show on scroll up
+        if (currentScrollY > prevScrollY.value + 5) { // 5px buffer for jitter
+          headerVisible.value = false;
+        } else if (currentScrollY < prevScrollY.value - 10) { // 10px buffer for deliberate scroll up
+          headerVisible.value = true;
+        }
+      }
+      
+      prevScrollY.value = currentScrollY;
+    },
+  });
+
   const handleMoodSelect = (moodId: MoodId) => {
+    // Block if trial expired
+    if (checkTrialStatus()) return;
+
     setSelectedMood(moodId);
     router.push(`/mood/${moodId}`);
   };
@@ -102,12 +142,17 @@ export default function HomeScreen() {
     <View className="flex-1 bg-surface">
       <StatusBar style="dark" />
 
-      {/* Header */}
-      <Header />
+      {/* Header - Now Absolute and Animated */}
+      <Header headerVisible={headerVisible} />
 
-      <ScrollView
-        className="flex-1 px-6 pt-4"
-        contentContainerClassName="pb-32"
+      <Animated.ScrollView
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        className="flex-1 px-6"
+        contentContainerStyle={{ 
+          paddingTop: insets.top + 100, // Safe area + Header height
+          paddingBottom: 120 
+        }}
         showsVerticalScrollIndicator={false}>
         <RandomQuote />
 
@@ -146,24 +191,7 @@ export default function HomeScreen() {
             );
           })}
         </View>
-
-        {/* Journaling / Daily Widget Teaser */}
-        <View className="mb-12 flex-col justify-between rounded-3xl border border-transparent bg-surface-container p-6">
-          <View>
-            <Text className="mb-2 font-noto-serif text-2xl text-on-surface">Daily Reflection</Text>
-            <Text className="pr-4 font-manrope text-sm text-on-surface-variant">
-              Set up daily rotations to get fresh quotes on your widget throughout the day.
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => router.push('/(tabs)/daily')}
-            className="mt-6 w-[80%] items-center rounded-full bg-primary px-6 py-4">
-            <Text className="font-manrope text-xs font-semibold uppercase tracking-widest text-on-primary">
-              Set Up Rotation
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

@@ -2,72 +2,81 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct WidgetAttributes: ActivityAttributes {
+struct AuraAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
-        // Dynamic stateful properties about your activity go here!
-        var emoji: String
+        var quote: String
+        var moodEmoji: String
+        var colorHex: String
     }
 
-    // Fixed non-changing properties about your activity go here!
-    var name: String
+    var focusGoal: String
 }
 
-struct WidgetLiveActivity: Widget {
+struct AuraLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: WidgetAttributes.self) { context in
-            // Lock screen/banner UI goes here
-            VStack {
-                Text("Hello \(context.state.emoji)")
+        ActivityConfiguration(for: AuraAttributes.self) { context in
+            // Lock screen / Notification UI
+            HStack(spacing: 12) {
+                Text(context.state.moodEmoji)
+                    .font(.system(size: 32))
+                    .padding(8)
+                    .background(Color(hex: context.state.colorHex).opacity(0.2))
+                    .clipShape(Circle())
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(context.attributes.focusGoal.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(Color(hex: context.state.colorHex))
+                        .tracking(1)
+                    
+                    Text(context.state.quote)
+                        .font(.system(size: 16, weight: .semibold, design: .serif))
+                        .lineLimit(2)
+                }
+                
+                Spacer()
             }
-            .activityBackgroundTint(Color.cyan)
+            .padding()
+            .activityBackgroundTint(Color.white.opacity(0.9))
             .activitySystemActionForegroundColor(Color.black)
 
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded UI goes here.  Compose the expanded UI through
-                // various regions, like leading/trailing/center/bottom
+                // Expanded - The full detailed view when long-pressed
                 DynamicIslandExpandedRegion(.leading) {
-                    Text("Leading")
+                    Text(context.state.moodEmoji)
+                        .font(.title)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text("Trailing")
+                    Text("Aura")
+                        .font(.caption)
+                        .foregroundColor(Color(hex: context.state.colorHex))
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("Bottom \(context.state.emoji)")
-                    // more content
+                    Text(context.state.quote)
+                        .font(.system(size: 20, weight: .medium, design: .serif))
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 4)
                 }
             } compactLeading: {
-                Text("L")
+                Text(context.state.moodEmoji)
             } compactTrailing: {
-                Text("T \(context.state.emoji)")
+                Text("Focus")
+                    .font(.caption2)
+                    .foregroundColor(Color(hex: context.state.colorHex))
             } minimal: {
-                Text(context.state.emoji)
+                Text(context.state.moodEmoji)
             }
-            .widgetURL(URL(string: "https://www.expo.dev"))
-            .keylineTint(Color.red)
+            .widgetURL(URL(string: "iamaura://"))
+            .keylineTint(Color(hex: context.state.colorHex))
         }
     }
 }
 
-extension WidgetAttributes {
-    fileprivate static var preview: WidgetAttributes {
-        WidgetAttributes(name: "World")
-    }
-}
-
-extension WidgetAttributes.ContentState {
-    fileprivate static var smiley: WidgetAttributes.ContentState {
-        WidgetAttributes.ContentState(emoji: "😀")
-     }
-     
-     fileprivate static var starEyes: WidgetAttributes.ContentState {
-         WidgetAttributes.ContentState(emoji: "🤩")
-     }
-}
-
-#Preview("Notification", as: .content, using: WidgetAttributes.preview) {
-   WidgetLiveActivity()
+// MARK: - Previews
+#Preview("Notification", as: .content, using: AuraAttributes(focusGoal: "Mindfulness")) {
+   AuraLiveActivity()
 } contentStates: {
-    WidgetAttributes.ContentState.smiley
-    WidgetAttributes.ContentState.starEyes
+    AuraAttributes.ContentState(quote: "I am present and at peace.", moodEmoji: "🌿", colorHex: "#96CEB4")
+    AuraAttributes.ContentState(quote: "I embrace the journey before me.", moodEmoji: "⭐", colorHex: "#FDCB6E")
 }

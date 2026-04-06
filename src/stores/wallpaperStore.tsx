@@ -3,8 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { colors, DEFAULT_GRADIENT } from '../constants/colors';
-import { updateWidgetData } from 'widget-bridge';
 import { MOODS, MoodId } from '../constants/moods';
+import { ExtensionStorage } from '@bacons/apple-targets';
 
 export type BackgroundType = 'color' | 'gradient' | 'image' | 'pattern';
 
@@ -47,7 +47,7 @@ export interface Wallpaper {
   fontFamily: string;
   textContent: string;
 
-  // Metadata
+  dominantColor?: string;
   createdAt: string;
   isFavorite: boolean;
   isDaily: boolean;
@@ -120,43 +120,31 @@ export const useWallpaperStore = create<WallpaperState>()(
       const syncToWidget = () => {
         const { savedWallpapers, dailyQueue } = get();
 
-        // Find the wallpaper that should be shown on the widget
+        // 1. Find the primary wallpaper to show (usually the first in the daily queue)
         const dailyWallpaperId =
           dailyQueue?.[0] || savedWallpapers.find((w) => w.isDaily)?.id || savedWallpapers[0]?.id;
-        const wp = savedWallpapers.find((w) => w.id === dailyWallpaperId);
+        const currentWp = savedWallpapers.find((w) => w.id === dailyWallpaperId);
 
-        if (wp) {
-          const moodInfo = MOODS[wp.moodId as MoodId];
+        if (currentWp) {
+          const mapToSwiftMetadata = (wp: Wallpaper) => {
+            const moodInfo = MOODS[wp.moodId as MoodId];
+            return {
+              id: wp.id,
+              moodId: wp.moodId,
+              moodName: moodInfo?.name || wp.moodId,
+              moodEmoji: moodInfo?.emoji || '🌿',
+            };
+          };
 
-          // Prepare queue with correct property names for the bridge
-          const queue = dailyQueue
-            .map((id) => {
-              const item = savedWallpapers.find((w) => w.id === id);
-              return item
-                ? {
-                    id: item.id,
-                    quote: item.quote,
-                    mood: item.moodId,
-                    time: '', // Optional if needed for Swift code
-                  }
-                : null;
-            })
-            .filter(Boolean);
-
-          // Get background color from value (handle arrays if gradient)
-          const bgColor = Array.isArray(wp.backgroundValue)
-            ? wp.backgroundValue[0]
-            : wp.backgroundValue || '#96CEB4';
-
-          updateWidgetData({
-            quote: wp.quote,
-            mood: moodInfo?.name || wp.moodId,
-            moodEmoji: moodInfo?.emoji || '🌿',
-            textColor: wp.textColor || '#FFFFFF',
-            backgroundColor: bgColor as string,
-            wallpaperId: wp.id,
-            dailyQueue: queue as any[],
-          }).catch((err) => console.error('Widget sync failed:', err));
+          // 2. Map only essential metadata for the current wallpaper
+          const metadata = mapToSwiftMetadata(currentWp);
+          
+          // 3. Update via ExtensionStorage (Official module)
+          const storage = new ExtensionStorage("group.com.sureshbabudj.iamaura");
+          storage.set("currentWallpaper", metadata);
+          
+          // 4. Force widget refresh
+          ExtensionStorage.reloadWidget();
         }
       };
 

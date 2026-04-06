@@ -1,87 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { Tabs, Redirect } from 'expo-router';
-import { Sparkles, Palette, Award, Settings } from 'lucide-react-native';
-import { View, Pressable } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Redirect } from 'expo-router';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { colors } from '@/src/constants/colors';
 import { useAppStore } from '@/src/stores/appStore';
 
-function CustomTabBar({ state, navigation }: BottomTabBarProps) {
-  return (
-    <View className="absolute bottom-4 left-0 right-0 items-center px-8">
-      <BlurView
-        intensity={90}
-        tint="light"
-        className="w-full max-w-md flex-row items-center justify-around overflow-hidden rounded-full bg-surface px-6 py-3 shadow-lg">
-        <Pressable
-          onPress={() => navigation.navigate('index')}
-          className={`rounded-full p-3 ${state.index === 0 ? 'bg-primary' : ''}`}>
-          <Sparkles
-            size={24}
-            color={state.index === 0 ? colors['on-primary'] : colors['primary']}
-            opacity={state.index === 0 ? 1 : 0.9}
-          />
-        </Pressable>
-        <Pressable
-          onPress={() => navigation.navigate('library')}
-          className={`rounded-full p-3 ${state.index === 1 ? 'bg-primary' : ''}`}>
-          <Palette
-            size={24}
-            color={state.index === 1 ? colors['on-primary'] : colors['primary']}
-            opacity={state.index === 1 ? 1 : 0.9}
-          />
-        </Pressable>
-        <Pressable
-          onPress={() => navigation.navigate('daily')}
-          className={`rounded-full p-3 ${state.index === 2 ? 'bg-primary' : ''}`}>
-          <Award
-            size={24}
-            color={state.index === 2 ? colors['on-primary'] : colors['primary']}
-            opacity={state.index === 2 ? 1 : 0.9}
-          />
-        </Pressable>
-        <Pressable
-          onPress={() => navigation.navigate('settings')}
-          className={`rounded-full p-3 ${state.index === 3 ? 'bg-primary' : ''}`}>
-          <Settings
-            size={24}
-            color={state.index === 3 ? colors['on-primary'] : colors['primary']}
-            opacity={state.index === 3 ? 1 : 0.9}
-          />
-        </Pressable>
-      </BlurView>
-    </View>
-  );
-}
-
-export default function TabsLayout() {
+export default function AppTabs() {
   const { hasSeenOnboarding } = useAppStore();
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    // Check if Zustand store has hydrated storage yet
     const unsub = useAppStore.persist.onFinishHydration(() => setIsHydrated(true));
     setIsHydrated(useAppStore.persist.hasHydrated());
-    
-    return () => {
-      unsub();
-    };
+    return () => unsub();
   }, []);
 
-  if (!isHydrated) {
-    return null; // Wait for hydration to determine routing correctly
-  }
-
-  if (!hasSeenOnboarding) {
-    return <Redirect href="/onboarding" />;
-  }
+  if (!isHydrated) return null;
+  if (!hasSeenOnboarding) return <Redirect href="/onboarding" />;
 
   return (
-    <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="library" />
-      <Tabs.Screen name="daily" />
-    </Tabs>
+    <NativeTabs
+      backgroundColor={colors.surface}
+      blurEffect="systemThickMaterialLight"
+      iconColor={{ default: colors['on-surface-variant'], selected: colors['primary'] }}
+      indicatorColor={colors.primary}
+      labelStyle={{
+        default: { color: colors['on-surface-variant'], fontWeight: '400', fontSize: 10 },
+        selected: { color: colors.primary, fontWeight: '700', fontSize: 10 },
+      }}>
+      <NativeTabs.Trigger name="index">
+        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={require('../../../assets/icons/aura.png')} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="library">
+        <NativeTabs.Trigger.Label>Library</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={require('../../../assets/icons/wallpapers.png')} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="settings">
+        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={require('../../../assets/icons/settings.png')} />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

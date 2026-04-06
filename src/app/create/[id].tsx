@@ -17,9 +17,13 @@ import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 import { WallpaperCanvas } from '@/src/components/wallpaper/WallpaperCanvas';
 import { CustomizerControls } from '@/src/components/wallpaper/CustomizerControls';
 import { colors } from '@/src/constants/colors';
+import { MOODS, MoodId } from '@/src/constants/moods';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import ViewShot from 'react-native-view-shot';
+import { getAppGroupPath } from 'widget-bridge';
+import { ExtensionStorage } from '@bacons/apple-targets';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -27,17 +31,27 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSubscriptionStore } from '@/src/stores/subscriptionStore';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+/**
+ * CUSTOMIZE SCREEN - With Ghost Renderer for Widgets
+ */
 export default function CustomizeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { currentWallpaper, saveWallpaper, loadWallpaper } = useWallpaperStore();
-  const viewShotRef = useRef<ViewShot>(null);
-  const [saving, setSaving] = useState(false);
+  const { incrementSaveCount } = useSubscriptionStore();
   const insets = useSafeAreaInsets();
 
+  // View References
+  const viewShotRef = useRef<ViewShot>(null);
+  const smallShotRef = useRef<ViewShot>(null);
+  const mediumShotRef = useRef<ViewShot>(null);
+  const largeShotRef = useRef<ViewShot>(null);
+
+  const [saving, setSaving] = useState(false);
   const [isControlsVisible, setIsControlsVisible] = useState(false);
 
   // Animation values
@@ -51,7 +65,7 @@ export default function CustomizeScreen() {
       stiffness: 100,
       mass: 0.8,
     });
-    scale.value = withSpring(visible ? 0.6 : 1, {
+    scale.value = withSpring(visible ? 0.82 : 1, {
       damping: 25,
       stiffness: 100,
       mass: 0.8,
@@ -75,50 +89,104 @@ export default function CustomizeScreen() {
     if (id && id !== 'new') {
       loadWallpaper(id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, loadWallpaper]);
 
   const handleSaveToGallery = async () => {
     if (saving) return;
+    
+    // Check daily save limit
+    if (!incrementSaveCount()) return;
+
     try {
       setSaving(true);
-      // Wait for React to process setSaving before showing permissions or capturing
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          'Permission needed',
-          'We need permission to save the wallpaper to your gallery.'
-        );
+        Alert.alert('Permission needed', 'We need permission to save to gallery.');
         return;
       }
-
-      // Small delay to ensure any layout from permissions dialogue has settled
-      // await new Promise((resolve) => setTimeout(resolve, 100));
 
       const uri = await viewShotRef.current?.capture?.();
       if (uri) {
         await MediaLibrary.saveToLibraryAsync(uri);
-        Alert.alert(
-          'Success',
-          'Wallpaper saved to your gallery! You can now set it as your wallpaper in your phone settings.'
-        );
+        Alert.alert('Success', 'Wallpaper saved to gallery!');
       }
     } catch (error) {
-      console.error('Failed to save wallpaper:', error);
-      Alert.alert('Error', 'Failed to save wallpaper. Please try again.');
+      console.error('Gallery save error:', error);
+      Alert.alert('Error', 'Failed to save to gallery.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleSave = () => {
-    saveWallpaper();
-    if (router.canDismiss()) {
-      router.dismissAll();
+  const handleSave = async () => {
+    if (saving) return;
+
+    // Check daily save limit
+    if (!incrementSaveCount()) return;
+
+    setSaving(true);
+
+    try {
+      // 1. Save locally
+      const savedId = saveWallpaper();
+
+      // 2. Ghost Renderer Sync
+      const groupPath = getAppGroupPath();
+      console.log('--- WIDGET SYNC START ---');
+      console.log('App Group Path:', groupPath);
+
+      if (groupPath) {
+        const snapshots = [
+          { ref: smallShotRef, name: 'small_widget.png' },
+          { ref: mediumShotRef, name: 'medium_widget.png' },
+          { ref: largeShotRef, name: 'large_widget.png' },
+        ];
+
+        for (const shot of snapshots) {
+          try {
+            // Give time for each off-screen renderer to mount/draw
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            const uri = await shot.ref.current?.capture?.();
+            console.log(`Captured ${shot.name}:`, uri);
+            
+            if (uri) {
+              const dest = `file://${groupPath}/${shot.name}`;
+              await FileSystem.copyAsync({
+                from: uri,
+                to: dest,
+              });
+              
+              // Verify copy
+              const info = await FileSystem.getInfoAsync(dest);
+              console.log(`Verified ${shot.name} at ${dest}:`, info.exists);
+            }
+          } catch (err) {
+            console.error(`Error capturing/copying ${shot.name}:`, err);
+          }
+        }
+
+        const moodInfo = MOODS[currentWallpaper.moodId as MoodId];
+        const storage = new ExtensionStorage("group.com.sureshbabudj.iamaura");
+        storage.set("currentWallpaper", {
+          id: savedId,
+          moodId: currentWallpaper.moodId || '',
+          moodName: moodInfo?.name || '',
+          moodEmoji: moodInfo?.emoji || '',
+        });
+        
+        ExtensionStorage.reloadWidget();
+      }
+
+      router.replace('/(tabs)/library');
+    } catch (error) {
+      console.error('Widget Sync Error:', error);
+      Alert.alert('Save Error', 'We saved your design, but the widget preview might not update.');
+    } finally {
+      setSaving(false);
     }
-    router.replace('/(tabs)/library');
   };
 
   const handleShare = async () => {
@@ -136,12 +204,11 @@ export default function CustomizeScreen() {
                 await Sharing.shareAsync(uri);
               }
             } else if (buttonIndex === 2) {
-              await handleSaveToGallery(); // Call existing gallery function
+              await handleSaveToGallery();
             }
           }
         );
       } else {
-        // Share API which natively opens a modal on Android/others
         const uri = await viewShotRef.current?.capture?.();
         if (uri) {
           await Sharing.shareAsync(uri, {
@@ -179,12 +246,7 @@ export default function CustomizeScreen() {
 
         <View className="flex-col items-center">
           <Text
-            className={`font-noto-serif-italic text-2xl tracking-tight ${isControlsVisible ? 'text-on-surface' : 'text-white'}`}
-            style={{
-              textShadowColor: 'rgba(0,0,0,0.1)',
-              textShadowOffset: { width: 0, height: 2 },
-              textShadowRadius: 10,
-            }}>
+            className={`font-noto-serif-italic text-2xl tracking-tight ${isControlsVisible ? 'text-on-surface' : 'text-white'}`}>
             Aura
           </Text>
           <Text
@@ -199,7 +261,6 @@ export default function CustomizeScreen() {
             className={`rounded-full p-3 shadow-sm active:scale-95 ${isControlsVisible ? 'bg-primary' : 'bg-white'}`}>
             <Save size={20} color={isControlsVisible ? colors['on-primary'] : colors.primary} />
           </Pressable>
-
           <Pressable
             onPress={handleShare}
             className={`rounded-full p-3 shadow-sm active:scale-95 ${isControlsVisible ? 'bg-primary' : 'bg-white'}`}>
@@ -213,21 +274,14 @@ export default function CustomizeScreen() {
         <WallpaperCanvas ref={viewShotRef as any} />
       </Animated.View>
 
-      {/* Floating Customize Toggle Button */}
+      {/* Customize Toggle */}
       {!isControlsVisible && (
         <View
           pointerEvents="box-none"
           className="absolute bottom-12 left-0 right-0 z-30 flex-row justify-center">
           <Pressable
             onPress={() => toggleControls(true)}
-            className="flex-row items-center gap-3 rounded-full bg-white/90 px-6 py-4 shadow-2xl backdrop-blur-xl active:scale-95"
-            style={{
-              shadowColor: colors.black,
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.2,
-              shadowRadius: 20,
-              elevation: 10,
-            }}>
+            className="flex-row items-center gap-3 rounded-full bg-white/90 px-6 py-4 shadow-2xl backdrop-blur-xl active:scale-95">
             <Settings2 size={20} color={colors.primary} strokeWidth={2.5} />
             <Text className="font-manrope text-sm font-bold uppercase tracking-widest text-primary">
               Customize
@@ -236,7 +290,7 @@ export default function CustomizeScreen() {
         </View>
       )}
 
-      {/* Animated Controls Section */}
+      {/* Controls Container */}
       <Animated.View
         pointerEvents="box-none"
         style={[StyleSheet.absoluteFill, animatedControlsStyle]}
@@ -248,6 +302,41 @@ export default function CustomizeScreen() {
           onClose={() => toggleControls(false)}
         />
       </Animated.View>
+
+      {/* --- GHOST RENDERERS (Hidden but mounted for capture) --- */}
+      <View 
+        pointerEvents="none"
+        style={{ 
+          position: 'absolute', 
+          opacity: 0.1, 
+          zIndex: -1, 
+          left: 0, 
+          top: 0, 
+          width: 1, 
+          height: 1,
+          overflow: 'visible' 
+        }}>
+        {/* Small Widget Capture - 1:1 Aspect */}
+        <ViewShot ref={smallShotRef} options={{ format: 'png', quality: 1 }}>
+          <View collapsable={false} style={{ width: 600, height: 600 }}>
+            <WallpaperCanvas skipViewShot />
+          </View>
+        </ViewShot>
+
+        {/* Medium Widget Capture - 2:1 Aspect */}
+        <ViewShot ref={mediumShotRef} options={{ format: 'png', quality: 1 }}>
+          <View collapsable={false} style={{ width: 1200, height: 600 }}>
+            <WallpaperCanvas skipViewShot />
+          </View>
+        </ViewShot>
+
+        {/* Large Widget Capture - 1:1 Large */}
+        <ViewShot ref={largeShotRef} options={{ format: 'png', quality: 1 }}>
+          <View collapsable={false} style={{ width: 1000, height: 1000 }}>
+            <WallpaperCanvas skipViewShot />
+          </View>
+        </ViewShot>
+      </View>
     </View>
   );
 }

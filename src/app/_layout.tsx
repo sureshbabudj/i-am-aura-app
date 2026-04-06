@@ -22,6 +22,8 @@ import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { MoodProvider } from '@/src/stores/moodStore';
+import { useSubscriptionStore } from '@/src/stores/subscriptionStore';
+import { PaywallProvider } from '@/src/components/subscription/PaywallProvider';
 import '@/global.css';
 
 const queryClient = new QueryClient();
@@ -45,11 +47,14 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   });
 
+  const initializeStore = useSubscriptionStore(state => state.initialize);
+
   useEffect(() => {
     if (fontsLoaded) {
+      initializeStore();
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, initializeStore]);
 
   if (!fontsLoaded) return null;
 
@@ -57,31 +62,33 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <MoodProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="mood/[mood]"
-                options={{
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                }}
-              />
-              <Stack.Screen
-                name="create/[id]"
-                options={{
-                  presentation: 'fullScreenModal',
-                  animation: 'fade',
-                }}
-              />
-              <Stack.Screen
-                name="settings/index"
-                options={{ presentation: 'modal', title: 'Settings' }}
-              />
-              <Stack.Screen name="onboarding" options={{ presentation: 'fullScreenModal' }} />
-            </Stack>
-            <StatusBar style="auto" />
-          </MoodProvider>
+          <PaywallProvider>
+            <MoodProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="mood/[mood]"
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                  }}
+                />
+                <Stack.Screen
+                  name="create/[id]"
+                  options={{
+                    presentation: 'fullScreenModal',
+                    animation: 'fade',
+                  }}
+                />
+                <Stack.Screen
+                  name="settings/index"
+                  options={{ presentation: 'modal', title: 'Settings' }}
+                />
+                <Stack.Screen name="onboarding" options={{ presentation: 'fullScreenModal' }} />
+              </Stack>
+              <StatusBar style="auto" />
+            </MoodProvider>
+          </PaywallProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </QueryClientProvider>

@@ -1,8 +1,8 @@
-import { View, Text, Pressable, Dimensions, FlatList, ListRenderItemInfo } from 'react-native';
+import { View, Text, Pressable, Dimensions, FlatList, ListRenderItemInfo, ViewToken } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Sparkles, ChevronDown } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useCallback, useRef } from 'react';
 import Animated, {
   useAnimatedStyle,
   withRepeat,
@@ -13,6 +13,7 @@ import Animated, {
 
 import { MOODS, MoodId } from '@/src/constants/moods';
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
+import { useSubscriptionStore } from '@/src/stores/subscriptionStore';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { groupedQuotes } from '@/src/constants/groupedQuotes';
@@ -25,10 +26,39 @@ export default function QuoteSelectionScreen() {
   const { mood } = useLocalSearchParams<{ mood: MoodId }>();
   const router = useRouter();
   const { createWallpaper } = useWallpaperStore();
+  const { incrementQuoteCount, checkTrialStatus } = useSubscriptionStore();
   const insets = useSafeAreaInsets();
+  
+  // Track viewed indices to avoid double counting
+  const viewedIndices = useRef(new Set<number>());
 
   const moodConfig = MOODS[mood as MoodId];
   const bounceValue = useSharedValue(0);
+
+  const handleSelectQuote = (text: string) => {
+    // Block if trial expired
+    if (checkTrialStatus()) return;
+    
+    createWallpaper(mood, text);
+    router.push('/create/new');
+  };
+
+  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems.length > 0) {
+      const topItem = viewableItems[0];
+      if (topItem.index !== null && !viewedIndices.current.has(topItem.index)) {
+        viewedIndices.current.add(topItem.index);
+        // Only increment if it's not the first quote
+        if (topItem.index > 0) {
+          incrementQuoteCount();
+        }
+      }
+    }
+  }, [incrementQuoteCount]);
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
 
   useEffect(() => {
     bounceValue.value = withRepeat(
@@ -45,7 +75,7 @@ export default function QuoteSelectionScreen() {
   const randomizedQuotes = useMemo(() => {
     if (!moodConfig) return [];
 
-    const categoryQuotes = (groupedQuotes as any)[mood as string] || [];
+    const categoryQuotes = (mood ? groupedQuotes[mood] : []) || [];
     const baseQuotes = moodConfig.quotes.map((text) => ({ quote: text }));
 
     // Combine and shuffle
@@ -65,11 +95,6 @@ export default function QuoteSelectionScreen() {
       </View>
     );
   }
-
-  const handleSelectQuote = (text: string) => {
-    createWallpaper(mood, text);
-    router.push('/create/new');
-  };
 
   const renderItem = ({ item, index }: ListRenderItemInfo<QuoteItem>) => (
     <View
@@ -155,6 +180,8 @@ export default function QuoteSelectionScreen() {
         decelerationRate="fast"
         disableIntervalMomentum={true}
         removeClippedSubviews={true}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         initialNumToRender={5}
         maxToRenderPerBatch={5}
         windowSize={10}

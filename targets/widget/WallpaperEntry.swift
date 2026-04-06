@@ -1,56 +1,30 @@
 import WidgetKit
 import SwiftUI
 
+// Simplified metadata representation
 struct WallpaperEntry: TimelineEntry {
     let date: Date
-    let wallpaper: WallpaperData
+    let wallpaper: WallpaperMetadata
 }
 
-struct WallpaperData: Codable {
+struct WallpaperMetadata: Codable {
     let id: String
-    let quote: String
-    let moodId: String
-    let moodName: String
     let moodEmoji: String
-    let backgroundType: String // "color", "gradient", "image", "pattern"
-    let backgroundValue: AnyCodable // String for color, [String] for gradient, String for image URL
-    let patternConfig: PatternConfig?
-    let textColor: String
-    let dominantColor: String?
-    
-    struct PatternConfig: Codable {
-        let type: String
-        let color: String
-        let opacity: Double
-        let scale: Double?
-    }
+    let moodName: String
 }
 
-// Helper for polymorphic Codable
-struct AnyCodable: Codable {
-    let value: Any
-    
-    init(_ value: Any) {
-        self.value = value
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let string = try? container.decode(String.self) {
-            value = string
-        } else if let array = try? container.decode([String].self) {
-            value = array
-        } else {
-            value = ""
-        }
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        if let string = value as? String {
-            try container.encode(string)
-        } else if let array = value as? [String] {
-            try container.encode(array)
-        }
-    }
+// MARK: - Sample Data
+extension WallpaperMetadata {
+    static let sample = WallpaperMetadata(
+        id: "active_wallpaper",
+        moodEmoji: "🌿",
+        moodName: "Peaceful"
+    )
+}
+
+extension WallpaperEntry {
+    static let sample = WallpaperEntry(
+        date: Date(),
+        wallpaper: .sample
+    )
 }

@@ -2,69 +2,49 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-struct widgetControl: ControlWidget {
-    static let kind: String = "com.developer.example.widget"
+struct WallpaperControl: ControlWidget {
+    static let kind: String = "com.sureshbabudj.iamaura.quoteControl"
 
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(
             kind: Self.kind,
             provider: Provider()
         ) { value in
-            ControlWidgetToggle(
-                "Start Timer",
-                isOn: value.isRunning,
-                action: StartTimerIntent(value.name)
-            ) { isRunning in
-                Label(isRunning ? "On" : "Off", systemImage: "timer")
+            ControlWidgetButton(action: LaunchAppIntent()) {
+                Label("New Quote", systemImage: "sparkles")
             }
         }
-        .displayName("Timer")
-        .description("A an example control that runs a timer.")
+        .displayName("I Am Aura")
+        .description("Quickly open a new affirmation.")
     }
 }
 
-extension widgetControl {
+extension WallpaperControl {
     struct Value {
-        var isRunning: Bool
         var name: String
     }
 
     struct Provider: AppIntentControlValueProvider {
-        func previewValue(configuration: TimerConfiguration) -> Value {
-            widgetControl.Value(isRunning: false, name: configuration.timerName)
+        func previewValue(configuration: ControlConfiguration) -> Value {
+            WallpaperControl.Value(name: "Aura")
         }
 
-        func currentValue(configuration: TimerConfiguration) async throws -> Value {
-            let isRunning = true // Check if the timer is running
-            return widgetControl.Value(isRunning: isRunning, name: configuration.timerName)
+        func currentValue(configuration: ControlConfiguration) async throws -> Value {
+            return WallpaperControl.Value(name: "Aura")
         }
     }
 }
 
-struct TimerConfiguration: ControlConfigurationIntent {
-    static let title: LocalizedStringResource = "Timer Name Configuration"
-
-    @Parameter(title: "Timer Name", default: "Timer")
-    var timerName: String
+struct ControlConfiguration: ControlConfigurationIntent {
+    static let title: LocalizedStringResource = "Aura Configuration"
 }
 
-struct StartTimerIntent: SetValueIntent {
-    static let title: LocalizedStringResource = "Start a timer"
+struct LaunchAppIntent: AppIntent {
+    static let title: LocalizedStringResource = "Launch Aura"
+    static let openAppWhenRun: Bool = true
 
-    @Parameter(title: "Timer Name")
-    var name: String
-
-    @Parameter(title: "Timer is running")
-    var value: Bool
-
-    init() {}
-
-    init(_ name: String) {
-        self.name = name
-    }
-
-    func perform() async throws -> some IntentResult {
-        // Start the timer…
-        return .result()
+    func perform() async throws -> some IntentResult & ReturnsValue<Bool> {
+        // This will trigger opening the app via the "iamaura://" scheme
+        return .result(value: true)
     }
 }
