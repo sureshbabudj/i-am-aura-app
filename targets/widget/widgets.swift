@@ -77,54 +77,16 @@ struct WallpaperWidgetEntryView: View {
 struct FallbackPlaceholder: View {
     var entry: WallpaperEntry
     var body: some View {
-        ScrollView {
-            VStack(spacing: 8) {
+        VStack(spacing: 8) {
+            if entry.configuration.showIcon {
                 Text(entry.wallpaper.moodEmoji)
-                    .font(.largeTitle)
-                Text("Snapshot Unavailable")
-                    .font(.headline)
-                
-                Text("Updated: \(entry.date.formatted(date: .omitted, time: .standard))")
-                    .font(.system(size: 8))
-                    .foregroundColor(.secondary)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Entry ID: \(entry.wallpaper.id)")
-                    Text("Entry Small: \(entry.wallpaper.smallFilename ?? "nil")")
-                    
-                    if let defaults = UserDefaults(suiteName: "group.com.sureshbabudj.iamaura") {
-                        let allDict = defaults.dictionaryRepresentation()
-                        
-                        Text("--- Files on Disk ---")
-                            .font(.system(size: 10, weight: .bold))
-                            .padding(.top, 4)
-                        
-                        let sizes = ["smallFilename", "mediumFilename", "largeFilename"]
-                        ForEach(sizes, id: \.self) { key in
-                            if let fn = allDict[key] as? String, let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.sureshbabudj.iamaura")?.appendingPathComponent(fn) {
-                                let exists = FileManager.default.fileExists(atPath: url.path)
-                                Text("\(key): \(exists ? "EXISTS ✅" : "MISSING ❌")")
-                                    .font(.system(size: 8))
-                                    .foregroundColor(exists ? .green : .red)
-                            }
-                        }
-                        
-                        Text("--- Raw Suite Keys ---")
-                            .font(.system(size: 10, weight: .bold))
-                            .padding(.top, 4)
-                        
-                        let keys = allDict.keys.filter { $0.contains("aura") || $0.contains("Wallpaper") || $0.count < 30 }
-                        ForEach(keys.sorted(), id: \.self) { key in
-                            Text("\(key): \(String(describing: allDict[key] ?? "nil"))")
-                                .font(.system(size: 8, design: .monospaced))
-                                .foregroundColor(.blue)
-                        }
-                    }
-                }
-                .font(.system(size: 8, design: .monospaced))
-                .foregroundColor(.secondary)
+                    .font(.system(size: 32))
             }
-            .padding()
+            Text("Setting up your Aura...")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .containerBackground(for: .widget) { Color.black }
     }
 }

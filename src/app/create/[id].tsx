@@ -33,7 +33,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSubscriptionStore } from '@/src/stores/subscriptionStore';
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 /**
  * CUSTOMIZE SCREEN - With Ghost Renderer for Widgets
@@ -92,10 +92,8 @@ export default function CustomizeScreen() {
   }, [id, loadWallpaper]);
 
   const performWidgetSync = async () => {
-    console.log('[WIDGET_SYNC] START');
     try {
       const groupPath = AuraBridge.getAppGroupPath();
-      console.log('[WIDGET_SYNC] App Group Path:', groupPath);
 
       if (groupPath) {
         const timestamp = Date.now();
@@ -137,12 +135,9 @@ export default function CustomizeScreen() {
           moodEmoji: moodInfo?.emoji || '',
           ...filenames,
         };
-
-        console.log('[WIDGET_SYNC] Writing via AuraBridge...', metadata);
         AuraBridge.setSharedData(groupId, sharedKey, metadata);
 
         setTimeout(() => {
-          console.log('[WIDGET_SYNC] Reloading widget via AuraBridge...');
           AuraBridge.reloadWidget();
         }, 1000);
       }
@@ -179,8 +174,6 @@ export default function CustomizeScreen() {
     if (saving) return;
     setSaving(true);
     try {
-      console.log('[WIDGET_SYNC] --- SAVE PROCESS START ---');
-
       // 1. Capture and Sync Widget Images first
       await performWidgetSync();
 
@@ -312,10 +305,15 @@ export default function CustomizeScreen() {
       </Animated.View>
 
       {/* Hidden capture containers */}
-      <View style={{ position: 'absolute', left: -5000, top: 0, flexDirection: 'row' }} pointerEvents="none">
+      <View
+        style={{ position: 'absolute', left: -5000, top: 0, flexDirection: 'row' }}
+        pointerEvents="none">
         {/* Small Widget Capture - 158x158 */}
         <View style={{ width: 158, height: 158, overflow: 'hidden' }}>
-          <ViewShot ref={smallShotRef} options={{ format: 'png', quality: 1 }} style={{ width: 158, height: 158 }}>
+          <ViewShot
+            ref={smallShotRef}
+            options={{ format: 'png', quality: 1 }}
+            style={{ width: 158, height: 158 }}>
             <View collapsable={false} style={{ width: 158, height: 158 }}>
               <WallpaperCanvas skipViewShot size="small" />
             </View>
@@ -324,7 +322,10 @@ export default function CustomizeScreen() {
 
         {/* Medium Widget Capture - 338x158 */}
         <View style={{ width: 338, height: 158, overflow: 'hidden' }}>
-          <ViewShot ref={mediumShotRef} options={{ format: 'png', quality: 1 }} style={{ width: 338, height: 158 }}>
+          <ViewShot
+            ref={mediumShotRef}
+            options={{ format: 'png', quality: 1 }}
+            style={{ width: 338, height: 158 }}>
             <View collapsable={false} style={{ width: 338, height: 158 }}>
               <WallpaperCanvas skipViewShot size="medium" />
             </View>
@@ -333,7 +334,10 @@ export default function CustomizeScreen() {
 
         {/* Large Widget Capture - 338x354 */}
         <View style={{ width: 338, height: 354, overflow: 'hidden' }}>
-          <ViewShot ref={largeShotRef} options={{ format: 'png', quality: 1 }} style={{ width: 338, height: 354 }}>
+          <ViewShot
+            ref={largeShotRef}
+            options={{ format: 'png', quality: 1 }}
+            style={{ width: 338, height: 354 }}>
             <View collapsable={false} style={{ width: 338, height: 354 }}>
               <WallpaperCanvas skipViewShot size="large" />
             </View>

@@ -167,8 +167,6 @@ export const useWallpaperStore = create<WallpaperState>()(
           // 3. Update via Custom AuraBridge (Direct UserDefaults access)
           const groupId = 'group.com.sureshbabudj.iamaura';
           const sharedKey = 'currentWallpaper';
-          
-          console.log('[WIDGET_SYNC] Store writing via AuraBridge...', metadata);
           AuraBridge.setSharedData(groupId, sharedKey, metadata);
 
           // 4. Force widget refresh

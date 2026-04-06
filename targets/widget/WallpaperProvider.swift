@@ -10,20 +10,17 @@ struct WallpaperProvider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> WallpaperEntry {
-        let entry = await loadCurrentEntry() ?? .sample
-        return entry
+        let metadata = await loadCurrentMetadata() ?? .sample
+        return WallpaperEntry(date: Date(), wallpaper: metadata, configuration: configuration)
     }
     
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<WallpaperEntry> {
-        let entry = await loadCurrentEntry() ?? .sample
-        
-        // We set the date to NOW so that the system sees this as a fresh entry every time
-        let timelineEntry = WallpaperEntry(date: Date(), wallpaper: entry.wallpaper)
-        
-        return Timeline(entries: [timelineEntry], policy: .atEnd)
+        let metadata = await loadCurrentMetadata() ?? .sample
+        let entry = WallpaperEntry(date: Date(), wallpaper: metadata, configuration: configuration)
+        return Timeline(entries: [entry], policy: .atEnd)
     }
 
-    private func loadCurrentEntry() async -> WallpaperEntry? {
+    private func loadCurrentMetadata() async -> WallpaperMetadata? {
         let groupId = "group.com.sureshbabudj.iamaura"
         let defaults = UserDefaults(suiteName: groupId)
         
@@ -31,7 +28,7 @@ struct WallpaperProvider: AppIntentTimelineProvider {
             return nil
         }
         
-        let metadata = WallpaperMetadata(
+        return WallpaperMetadata(
             id: dict["id"] as? String ?? "unknown",
             moodEmoji: dict["moodEmoji"] as? String ?? "🌿",
             moodName: dict["moodName"] as? String ?? "Aura",
@@ -39,7 +36,5 @@ struct WallpaperProvider: AppIntentTimelineProvider {
             mediumFilename: dict["mediumFilename"] as? String,
             largeFilename: dict["largeFilename"] as? String
         )
-        
-        return WallpaperEntry(date: Date(), wallpaper: metadata)
     }
 }
