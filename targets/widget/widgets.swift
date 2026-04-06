@@ -24,6 +24,7 @@ struct WallpaperWidget: Widget {
         .configurationDisplayName("I Am Aura")
         .description("Your favorite affirmations, rendered perfectly.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .contentMarginsDisabled()
     }
 }
 
@@ -37,11 +38,13 @@ struct WallpaperWidgetEntryView: View {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
+                    .ignoresSafeArea(.all)
             } else {
                 FallbackPlaceholder(entry: entry)
             }
         }
-        .containerBackground(for: .widget) { Color.white.opacity(0.1) }
+        .containerBackground(for: .widget) { Color.black }
+        .ignoresSafeArea(.all)
     }
     
     private func loadSnapshot(for family: WidgetFamily) -> UIImage? {
