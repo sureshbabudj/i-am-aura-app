@@ -133,13 +133,18 @@ export const MOOD_DEFAULT_GRADIENTS: Record<string, string[]> = {
 export const useWallpaperStore = create<WallpaperState>()(
   persist(
     (set, get) => {
-      const syncToWidget = () => {
+      const syncToWidget = (priorityId?: string) => {
         const { savedWallpapers, dailyQueue } = get();
 
-        // 1. Find the primary wallpaper to show (usually the first in the daily queue)
-        const dailyWallpaperId =
-          dailyQueue?.[0] || savedWallpapers.find((w) => w.isDaily)?.id || savedWallpapers[0]?.id;
-        const currentWp = savedWallpapers.find((w) => w.id === dailyWallpaperId);
+        // 1. Resolve which wallpaper to sync:
+        // Priority: 1. Passed priorityId, 2. First daily in queue, 3. Any daily flagged, 4. First saved
+        const targetId =
+          priorityId ||
+          dailyQueue?.[0] ||
+          savedWallpapers.find((w) => w.isDaily)?.id ||
+          savedWallpapers[0]?.id;
+
+        const currentWp = savedWallpapers.find((w) => w.id === targetId);
 
         if (currentWp) {
           const mapToSwiftMetadata = (wp: Wallpaper) => {
@@ -161,7 +166,7 @@ export const useWallpaperStore = create<WallpaperState>()(
             return data;
           };
 
-          // 2. Map only essential metadata for the current wallpaper
+          // 2. Map only essential metadata for the resolved wallpaper
           const metadata: WallPaperEntry = mapToSwiftMetadata(currentWp);
 
           // 3. Update via Custom AuraBridge (Direct UserDefaults access)
@@ -222,7 +227,7 @@ export const useWallpaperStore = create<WallpaperState>()(
           }
 
           set({ savedWallpapers: newSaved });
-          syncToWidget();
+          syncToWidget(id);
           return id;
         },
 

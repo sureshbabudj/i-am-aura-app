@@ -17,7 +17,6 @@ import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 import { WallpaperCanvas } from '@/src/components/wallpaper/WallpaperCanvas';
 import { CustomizerControls } from '@/src/components/wallpaper/CustomizerControls';
 import { colors } from '@/src/constants/colors';
-import { MOODS, MoodId } from '@/src/constants/moods';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -123,23 +122,8 @@ export default function CustomizeScreen() {
         // Update store with these filenames so they persist and sync correctly
         updateWallpaper(filenames);
 
-        // Sync Metadata with individual filenames
-        const moodInfo = MOODS[currentWallpaper.moodId as MoodId];
-        const sharedKey = 'currentWallpaper';
-        const groupId = 'group.com.sureshbabudj.iamaura';
-
-        const metadata = {
-          id: currentWallpaper.id || '',
-          moodId: currentWallpaper.moodId || '',
-          moodName: moodInfo?.name || '',
-          moodEmoji: moodInfo?.emoji || '',
-          ...filenames,
-        };
-        AuraBridge.setSharedData(groupId, sharedKey, metadata);
-
-        setTimeout(() => {
-          AuraBridge.reloadWidget();
-        }, 1000);
+        // Metadata sync and widget reload are now handled automatically by saveWallpaper() in the store
+        // which now supports prioritized sync for the item we just modified.
       }
     } catch (error) {
       console.error('Widget Sync Error:', error);

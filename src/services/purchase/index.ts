@@ -1,21 +1,38 @@
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL, PurchasesOffering, CustomerInfo } from 'react-native-purchases';
 
+const ENABLE_REVENUECAT = true; // Set to true to test actual RevenueCat
 const REVENUECAT_API_KEY = 'test_sgCutEwbwTsPAtsBrvSKUCIYBiM';
 const ENTITLEMENT_ID = 'I am Aura Life';
 
 export class PurchaseService {
+  private static isMock = false;
+
   /**
    * Initializes RevenueCat SDK with the provided API key
    */
   static async initialize() {
-    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+    if (!ENABLE_REVENUECAT) {
+      console.log('RevenueCat Disabled: Entering Mock Mode for local device testing');
+      this.isMock = true;
+      return;
+    }
 
-    if (Platform.OS === 'ios') {
-      Purchases.configure({ apiKey: REVENUECAT_API_KEY });
-    } else {
-      // Configuration for Android would go here
-      // Purchases.configure({ apiKey: 'YOUR_ANDROID_KEY' });
+    try {
+      Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+
+      if (Platform.OS === 'ios') {
+        // Only attempt to configure if we're NOT in a release build or if we want to try anyway
+        // If it fails (no developer account), we'll fall back to mock mode
+        Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+        console.log('RevenueCat initialized successfully');
+      }
+    } catch (e) {
+      console.warn(
+        'RevenueCat Initialization Failed: Entering Mock Mode for local device testing',
+        e
+      );
+      this.isMock = true;
     }
   }
 
@@ -23,6 +40,11 @@ export class PurchaseService {
    * Checks if the user has the 'I am Aura Life' entitlement
    */
   static async checkEntitlement(): Promise<boolean> {
+    if (this.isMock) {
+      // In mock mode, we assume the user HAS it for testing purposes if you want
+      // OR return false to test the paywall. Change to true if you want to skip paywall.
+      return false;
+    }
     try {
       const customerInfo = await Purchases.getCustomerInfo();
       return customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
