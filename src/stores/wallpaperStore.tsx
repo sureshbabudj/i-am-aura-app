@@ -85,6 +85,7 @@ interface WallpaperState {
   // Loading
   loadWallpaper: (id: string) => void;
   resetCurrent: () => void;
+  syncToWidget: (id?: string) => void;
 
   // Recent items
   recentColors: string[];
@@ -227,7 +228,7 @@ export const useWallpaperStore = create<WallpaperState>()(
           }
 
           set({ savedWallpapers: newSaved });
-          syncToWidget(id);
+          // Removed syncToWidget(id) - sync is now an explicit user action from the UI
           return id;
         },
 
@@ -283,6 +284,8 @@ export const useWallpaperStore = create<WallpaperState>()(
           }));
           syncToWidget();
         },
+
+        syncToWidget: (id) => syncToWidget(id),
 
         loadWallpaper: (id) => {
           const { savedWallpapers } = get();

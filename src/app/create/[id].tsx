@@ -40,7 +40,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export default function CustomizeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { currentWallpaper, saveWallpaper, loadWallpaper, updateWallpaper } = useWallpaperStore();
+  const { currentWallpaper, saveWallpaper, loadWallpaper, updateWallpaper, syncToWidget } = useWallpaperStore();
   const { incrementSaveCount } = useSubscriptionStore();
   const insets = useSafeAreaInsets();
 
@@ -132,19 +132,21 @@ export default function CustomizeScreen() {
 
   const handleSaveToGallery = async () => {
     if (saving) return;
-    if (!incrementSaveCount()) return;
 
     try {
       setSaving(true);
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'We need photo library access to save wallpapers.');
+        return;
+      }
+
       const uri = await viewShotRef.current?.capture?.();
       if (uri) {
         await MediaLibrary.saveToLibraryAsync(uri);
-
-        // Also sync widget for consistency
-        await performWidgetSync();
+        // We still save to app library so user has it, but no widget sync here
         saveWallpaper();
-
-        Alert.alert('Success', 'Wallpaper saved and widget updated!');
+        Alert.alert('Success', 'Wallpaper saved to your gallery!');
       }
     } catch (error) {
       console.error('Gallery save error:', error);
@@ -154,21 +156,36 @@ export default function CustomizeScreen() {
     }
   };
 
+  const handleApplyToWidget = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      // 1. Capture and Sync Widget Images
+      await performWidgetSync();
+
+      // 2. Explicitly sync metadata to store & widget
+      const id = saveWallpaper();
+      syncToWidget(id);
+
+      Alert.alert('Success', 'Widget updated! Check your Home Screen.');
+    } catch (error) {
+      console.error('Widget Apply Error:', error);
+      Alert.alert('Error', 'Failed to update widget.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     if (saving) return;
     setSaving(true);
     try {
-      // 1. Capture and Sync Widget Images first
-      await performWidgetSync();
-
-      // 2. Now save to the store (it will now include filenames from our sync)
       saveWallpaper();
-
-      Alert.alert('Success', 'Design saved and widget updated!');
+      Alert.alert('Success', 'Design saved to your library!');
       router.replace('/(tabs)/library');
     } catch (error) {
       console.error('Save Error:', error);
-      Alert.alert('Save Error', 'We saved your design, but the widget might not update.');
+      Alert.alert('Save Error', 'Failed to save design.');
     } finally {
       setSaving(false);
     }
@@ -179,7 +196,7 @@ export default function CustomizeScreen() {
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: ['Cancel', 'Share', 'Save to Gallery'],
+            options: ['Cancel', 'Share', 'Set as Home Widget', 'Save to Gallery'],
             cancelButtonIndex: 0,
           },
           async (buttonIndex) => {
@@ -189,11 +206,14 @@ export default function CustomizeScreen() {
                 await Sharing.shareAsync(uri);
               }
             } else if (buttonIndex === 2) {
+              await handleApplyToWidget();
+            } else if (buttonIndex === 3) {
               await handleSaveToGallery();
             }
           }
         );
       } else {
+        // Android share logic can stay simple or include similar custom logic
         const uri = await viewShotRef.current?.capture?.();
         if (uri) {
           await Sharing.shareAsync(uri, {
