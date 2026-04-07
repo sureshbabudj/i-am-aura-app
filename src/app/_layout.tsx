@@ -81,8 +81,11 @@ export default function RootLayout() {
                   }}
                 />
                 <Stack.Screen
-                  name="settings/index"
-                  options={{ presentation: 'modal', title: 'Settings' }}
+                  name="settings/attributions"
+                  options={{
+                    presentation: 'modal',
+                    headerShown: false,
+                  }}
                 />
                 <Stack.Screen name="onboarding" options={{ presentation: 'fullScreenModal' }} />
               </Stack>

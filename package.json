@@ -37,6 +37,7 @@
     "expo-sharing": "~55.0.16",
     "expo-splash-screen": "~55.0.15",
     "expo-status-bar": "~55.0.5",
+    "expo-web-browser": "~55.0.13",
     "expo-widgets": "^55.0.8",
     "lucide-react-native": "^1.7.0",
     "nativewind": "^4.2.3",
