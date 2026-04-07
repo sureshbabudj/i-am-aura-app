@@ -151,8 +151,12 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
       <ImageSelectionModal
         visible={isImagesModalOpen}
         images={allImages}
-        onSelect={(url) => {
-          updateWallpaper({ backgroundType: 'image', backgroundValue: url });
+        onSelect={(imgInfo) => {
+          updateWallpaper({ 
+            backgroundType: 'image', 
+            backgroundValue: imgInfo.url,
+            unsplashHref: imgInfo.unsplashHref 
+          });
           setIsImagesModalOpen(false);
         }}
         onClose={() => setIsImagesModalOpen(false)}

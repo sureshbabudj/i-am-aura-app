@@ -76,12 +76,18 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
             </Text>
           </Pressable>
 
-          {allImages.slice(0, 7).map((url) => (
+          {allImages.slice(0, 7).map((imgInfo) => (
             <MoodImage
-              key={url}
-              url={url}
-              isSelected={currentWallpaper.backgroundValue === url}
-              onPress={() => updateWallpaper({ backgroundType: 'image', backgroundValue: url })}
+              key={imgInfo.url}
+              url={imgInfo.url}
+              isSelected={currentWallpaper.backgroundValue === imgInfo.url}
+              onPress={() => 
+                updateWallpaper({ 
+                  backgroundType: 'image', 
+                  backgroundValue: imgInfo.url,
+                  unsplashHref: imgInfo.unsplashHref 
+                })
+              }
             />
           ))}
 

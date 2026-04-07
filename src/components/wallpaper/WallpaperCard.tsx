@@ -15,6 +15,8 @@ import {
   SMALL_THUMB_IMG_HEIGHT,
 } from '@/src/constants/data';
 
+import * as Linking from 'expo-linking';
+
 export const RenderWallpaperCard = ({
   wallpaper,
   toggleFavorite,
@@ -26,6 +28,15 @@ export const RenderWallpaperCard = ({
 }) => {
   const moodConfig = MOODS[wallpaper.moodId as MoodId];
   const router = useRouter();
+
+  const handleOpenUnsplash = () => {
+    if (wallpaper.unsplashHref) {
+      const fullUrl = `https://unsplash.com${wallpaper.unsplashHref}`;
+      Linking.openURL(fullUrl);
+    } else {
+      Linking.openURL('https://unsplash.com');
+    }
+  };
 
   return (
     <View key={wallpaper.id} className="mb-8 w-full flex-col">
@@ -60,9 +71,11 @@ export const RenderWallpaperCard = ({
               contentFit="cover"
               transition={200}
             />
-            <View className="absolute bottom-4 right-4 z-10 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-md">
+            <Pressable 
+              onPress={handleOpenUnsplash}
+              className="absolute bottom-4 right-4 z-10 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-md active:bg-black/50">
               <Text className="font-manrope text-[10px] font-medium text-white/90">Unsplash</Text>
-            </View>
+            </Pressable>
           </View>
         )}
 

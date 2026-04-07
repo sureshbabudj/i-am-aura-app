@@ -4,6 +4,7 @@ import { X } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { colors } from '@/src/constants/colors';
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
+import { MoodImageInfo } from '@/src/constants/images';
 import {
   THUMB_IMG_WIDTH,
   THUMB_IMG_HEIGHT,
@@ -13,8 +14,8 @@ import {
 
 interface ImageSelectionModalProps {
   visible: boolean;
-  images: string[];
-  onSelect: (url: string) => void;
+  images: MoodImageInfo[];
+  onSelect: (img: MoodImageInfo) => void;
   onClose: () => void;
 }
 
@@ -43,7 +44,8 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
             flexWrap: 'wrap',
             justifyContent: 'space-between',
           }}>
-          {images.map((url, i) => {
+          {images.map((imgInfo, i) => {
+            const url = imgInfo.url;
             // Swap small thumbs for regular thumbs in modal
             const modalUrl = url
               .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
@@ -54,10 +56,10 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
             return (
               <Pressable
                 key={'allimg' + i}
-                onPress={() => onSelect(url)}
+                onPress={() => onSelect(imgInfo)}
                 style={{
                   width: '48%',
-                  height: 200,
+                  // height: 200,
                   aspectRatio: 0.8,
                   borderRadius: 12,
                   overflow: 'hidden',

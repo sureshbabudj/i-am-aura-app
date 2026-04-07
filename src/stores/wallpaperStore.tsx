@@ -58,6 +58,9 @@ export interface Wallpaper {
   smallFilename?: string;
   mediumFilename?: string;
   largeFilename?: string;
+
+  // External Links
+  unsplashHref?: string;
 }
 
 interface WallpaperState {

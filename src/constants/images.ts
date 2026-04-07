@@ -5,19 +5,29 @@ import {
   MOODS as MOOD_DATA,
 } from './data';
 
-const generateMoodImages = (mood: string, width: number, height: number) => {
+export interface MoodImageInfo {
+  url: string;
+  unsplashHref: string;
+}
+
+const generateMoodImages = (mood: string, width: number, height: number): MoodImageInfo[] => {
   const data = (MOOD_DATA as any)[mood];
   if (!data || !data.default) return [];
 
   return data.default.map((item: any) => {
-    return IMG_URL_FORMAT.replace('{IMAGE_WIDTH}', width.toString())
+    const url = IMG_URL_FORMAT.replace('{IMAGE_WIDTH}', width.toString())
       .replace('{IMAGE_HEIGHT}', height.toString())
       .replace('{MOOD}', mood)
       .replace('{IMAGE_ID}', item.unsplashId);
+    
+    return {
+      url,
+      unsplashHref: item.href || '',
+    };
   });
 };
 
-export const MOOD_IMAGES: Record<string, string[]> = {
+export const MOOD_IMAGES: Record<string, MoodImageInfo[]> = {
   confident: generateMoodImages('confident', SMALL_THUMB_IMG_WIDTH, SMALL_THUMB_IMG_HEIGHT),
   grateful: generateMoodImages('grateful', SMALL_THUMB_IMG_WIDTH, SMALL_THUMB_IMG_HEIGHT),
   peaceful: generateMoodImages('peaceful', SMALL_THUMB_IMG_WIDTH, SMALL_THUMB_IMG_HEIGHT),
