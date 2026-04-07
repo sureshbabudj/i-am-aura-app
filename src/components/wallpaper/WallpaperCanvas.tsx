@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Dimensions, StyleSheet } from 'react-native';
+import { View, Text, Dimensions, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SvgXml } from 'react-native-svg';
@@ -9,6 +9,7 @@ import { Image } from 'expo-image';
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 import ViewShot from 'react-native-view-shot';
 import { colors } from '@/src/constants/colors';
+import BrandIcon from '../common/Logo';
 import {
   FULL_IMG_WIDTH,
   FULL_IMG_HEIGHT,
@@ -222,6 +223,36 @@ export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>(
         </Animated.Text>
       </Animated.View>
       <View style={styles.vignette} pointerEvents="none" />
+
+      {/* Aura Branding Overlay */}
+      <View
+        style={[
+          styles.brandingContainer,
+          {
+            bottom: 24 * scaleFactor,
+            right: 24 * scaleFactor,
+            opacity: textOpacity * 0.8, // Subtle overlay
+            paddingHorizontal: 8 * scaleFactor,
+            paddingVertical: 4 * scaleFactor,
+            borderRadius: 12 * scaleFactor,
+          },
+        ]}
+        className="bg-surface-dim/10">
+        <View style={styles.brandRow}>
+          <Text
+            style={[
+              styles.brandText,
+              {
+                color: textColor,
+                fontSize: 12 * scaleFactor,
+                marginRight: 6 * scaleFactor,
+              },
+            ]}>
+            Aura
+          </Text>
+          <BrandIcon size={16 * scaleFactor} color={textColor} />
+        </View>
+      </View>
     </View>
   );
 
@@ -279,5 +310,19 @@ const styles = StyleSheet.create({
   vignette: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'transparent',
+  },
+  brandingContainer: {
+    position: 'absolute',
+    zIndex: 10,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  brandText: {
+    fontFamily: 'NotoSerif-Italic',
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
 });
