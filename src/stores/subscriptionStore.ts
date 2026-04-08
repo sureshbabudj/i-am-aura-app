@@ -7,7 +7,7 @@ import Purchases, { PurchasesOffering, CustomerInfo } from 'react-native-purchas
 // Usage Limits for Free Tier
 export const FREE_LIMIT_QUOTES = 4; // per session
 export const FREE_LIMIT_WALLPAPERS = 3; // per day
-export const FREE_LIMIT_WIDGETS = 3; // per day
+export const FREE_LIMIT_WIDGETS = 4; // per day
 export const FREE_TRIAL_DAYS = 3; // per trial
 
 interface UsageState {

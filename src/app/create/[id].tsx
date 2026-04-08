@@ -96,6 +96,21 @@ export default function CustomizeScreen() {
 
       if (groupPath) {
         const timestamp = Date.now();
+
+        // 1. Cleanup previous snapshots to avoid storage bloat
+        try {
+          const files = await FileSystem.readDirectoryAsync(`file://${groupPath}`);
+          const toDelete = files.filter(
+            (f) => f.startsWith('small_') || f.startsWith('medium_') || f.startsWith('large_')
+          );
+          for (const file of toDelete) {
+            await FileSystem.deleteAsync(`file://${groupPath}/${file}`, { idempotent: true });
+          }
+          console.log(`[WIDGET SYNC] Cleaned up ${toDelete.length} old snapshots.`);
+        } catch (err) {
+          console.warn('[WIDGET SYNC] Cleanup error (possibly empty):', err);
+        }
+
         const snapshots = [
           { ref: smallShotRef, name: `small_${timestamp}.png`, key: 'smallFilename' },
           { ref: mediumShotRef, name: `medium_${timestamp}.png`, key: 'mediumFilename' },
