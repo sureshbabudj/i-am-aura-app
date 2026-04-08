@@ -17,7 +17,7 @@ const MoodImage = React.memo(
       onPress={onPress}
       style={{
         width: 80,
-        aspectRatio: 0.8,
+        aspectRatio: 0.75,
         borderRadius: 12,
         overflow: 'hidden',
         backgroundColor: colors['surface-container-low'],
@@ -61,7 +61,7 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
             }
             style={{
               width: 80,
-              aspectRatio: 0.8,
+              aspectRatio: 0.75,
               borderRadius: 12,
               justifyContent: 'center',
               alignItems: 'center',
@@ -95,7 +95,7 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
             onPress={onShowMore}
             style={{
               width: 80,
-              aspectRatio: 0.8,
+              aspectRatio: 0.75,
               borderRadius: 12,
               justifyContent: 'center',
               alignItems: 'center',

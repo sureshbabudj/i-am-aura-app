@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Modal, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, Modal, Dimensions } from 'react-native';
 import { X } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { colors } from '@/src/constants/colors';
@@ -37,7 +37,7 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
           </Pressable>
         </View>
         <ScrollView
-          className="h-full w-full"
+          className="flex-1"
           contentContainerStyle={{
             padding: 24,
             flexDirection: 'row',
@@ -58,9 +58,8 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
                 key={'allimg' + i}
                 onPress={() => onSelect(imgInfo)}
                 style={{
-                  width: '48%',
-                  // height: 200,
-                  aspectRatio: 0.8,
+                  width: (Dimensions.get('window').width - 64) / 2, // 2 columns with padding
+                  aspectRatio: 0.75,
                   borderRadius: 12,
                   overflow: 'hidden',
                   backgroundColor: colors['surface-container-low'],
@@ -71,9 +70,10 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
                 }}>
                 <Image
                   source={{ uri: modalUrl }}
-                  style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+                  style={{ width: '100%', height: '100%', backgroundColor: colors['surface-container-low'] }}
                   contentFit="cover"
                   cachePolicy="memory-disk"
+                  transition={200}
                 />
               </Pressable>
             );
