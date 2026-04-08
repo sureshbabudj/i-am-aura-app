@@ -88,7 +88,7 @@ export const TextTab: React.FC<TextTabProps> = ({ onPickColor }) => {
         </View>
       </View>
 
-      <View>
+      <View className="my-2">
         <Text className="mb-2 font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant/60">
           Alignment
         </Text>
@@ -109,7 +109,7 @@ export const TextTab: React.FC<TextTabProps> = ({ onPickColor }) => {
             </Pressable>
           ))}
         </View>
-        <View className="mt-2 flex-row rounded-xl bg-surface-container-low p-1">
+        <View className="my-2 flex-row rounded-xl bg-surface-container-low p-1">
           {(['top', 'center', 'bottom'] as const).map((align) => (
             <Pressable
               key={'v' + align}
@@ -122,6 +122,29 @@ export const TextTab: React.FC<TextTabProps> = ({ onPickColor }) => {
               <Text
                 className={`font-manrope text-[10px] font-bold uppercase tracking-widest ${currentWallpaper.textAlignment?.vertical === align ? 'text-primary' : 'text-on-surface-variant'}`}>
                 {align}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <View>
+        <Text className="mb-2 font-manrope text-[10px] uppercase tracking-widest text-on-surface-variant/60">
+          Shadow
+        </Text>
+        <View className="flex-row items-center gap-4 rounded-xl bg-surface-container-low p-1">
+          {[true, false].map((val) => (
+            <Pressable
+              key={'sh' + val}
+              onPress={() => updateWallpaper({ textShadow: val })}
+              className={`flex-1 items-center rounded-lg py-2.5 ${
+                currentWallpaper.textShadow === val ? 'bg-white' : ''
+              }`}>
+              <Text
+                className={`font-manrope text-[10px] font-bold uppercase tracking-widest ${
+                  currentWallpaper.textShadow === val ? 'text-primary' : 'text-on-surface-variant'
+                }`}>
+                {val ? 'On' : 'Off'}
               </Text>
             </Pressable>
           ))}

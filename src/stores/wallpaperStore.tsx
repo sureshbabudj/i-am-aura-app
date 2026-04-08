@@ -47,6 +47,7 @@ export interface Wallpaper {
   textStyle?: string; // e.g., 'serifBold', 'script'
   fontFamily: string;
   textContent: string;
+  textShadow?: boolean;
 
   dominantColor?: string;
   createdAt: string;
@@ -124,6 +125,7 @@ export const DEFAULT_WALLPAPER: Partial<Wallpaper> = {
     color: colors.black,
   },
   textContent: '',
+  textShadow: true,
 };
 
 export const MOOD_DEFAULT_GRADIENTS: Record<string, string[]> = {

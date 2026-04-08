@@ -41,6 +41,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>(
     textOpacity = 1,
     textStyle,
     fontFamily = 'Inter-SemiBold',
+    textShadow = true,
   } = currentWallpaper;
 
   const displayQuote = textStyle
@@ -217,6 +218,15 @@ export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>(
               opacity: textOpacity,
               fontFamily: fontFamily,
               textAlign: textAlignment.horizontal as any,
+              ...(textShadow
+                ? {
+                    textShadowColor: 'rgba(0,0,0,0.4)',
+                    textShadowOffset: { width: 0, height: 1.5 },
+                    textShadowRadius: 6,
+                  }
+                : {
+                    textShadowRadius: 0,
+                  }),
             },
           ]}>
           {displayQuote}
@@ -302,9 +312,6 @@ const styles = StyleSheet.create({
   },
   quoteText: {
     fontWeight: '600',
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
     maxWidth: '100%',
   },
   vignette: {
