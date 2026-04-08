@@ -41,7 +41,7 @@ export default function CustomizeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { currentWallpaper, saveWallpaper, loadWallpaper, updateWallpaper, syncToWidget } = useWallpaperStore();
-  const { incrementSaveCount } = useSubscriptionStore();
+  const { checkUsageLimit } = useSubscriptionStore();
   const insets = useSafeAreaInsets();
 
   // View References
@@ -133,6 +133,10 @@ export default function CustomizeScreen() {
   const handleSaveToGallery = async () => {
     if (saving) return;
 
+    // 1. Check daily limit for Wallpapers
+    const canProceed = checkUsageLimit('wallpaper');
+    if (!canProceed) return;
+
     try {
       setSaving(true);
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -158,6 +162,11 @@ export default function CustomizeScreen() {
 
   const handleApplyToWidget = async () => {
     if (saving) return;
+
+    // 1. Check daily limit for Widgets
+    const canProceed = checkUsageLimit('widget');
+    if (!canProceed) return;
+
     setSaving(true);
     try {
       // 1. Capture and Sync Widget Images

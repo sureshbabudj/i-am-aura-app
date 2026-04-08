@@ -6,147 +6,174 @@ import Purchases, { PurchasesOffering, CustomerInfo } from 'react-native-purchas
 
 interface UsageState {
   quoteViewCount: number;
-  dailySaveCount: number;
-  lastSaveDate: string | null;
-  firstLaunchDate: string | null;
-}
-
-interface SubscriptionState extends UsageState {
-  isSubscribed: boolean;
-  isInitializing: boolean;
-  currentOfferings: PurchasesOffering | null;
-  customerInfo: CustomerInfo | null;
-  isPaywallVisible: boolean;
-
-  // Actions
-  initialize: () => Promise<void>;
-  checkStatus: () => Promise<void>;
-  purchasePackage: (packageObject: any) => Promise<boolean>;
-  restore: () => Promise<boolean>;
-  showPaywall: () => void;
-  hidePaywall: () => void;
-  showCustomerCenter: () => Promise<void>;
+    dailyWallpaperSetCount: number;
+    dailyWidgetSyncCount: number;
+    lastActionDate: string | null;
+    firstLaunchDate: string | null;
+  }
   
-  // Usage Actions
-  incrementQuoteCount: () => void;
-  incrementSaveCount: () => boolean; // Returns true if allowed, false if limited
-  checkTrialStatus: () => boolean; // Returns true if blocked by trial end
-}
-
-export const useSubscriptionStore = create<SubscriptionState>()(
-  persist(
-    (set, get) => ({
-      // State
-      isSubscribed: false,
-      isInitializing: true,
-      currentOfferings: null,
-      customerInfo: null,
-      isPaywallVisible: false,
-
-      // Usage State
-      quoteViewCount: 0,
-      dailySaveCount: 0,
-      lastSaveDate: null,
-      firstLaunchDate: null,
-
-      initialize: async () => {
-        try {
-          set({ isInitializing: true });
-          await PurchaseService.initialize();
-
-          // Initialize launch date if first time
-          if (!get().firstLaunchDate) {
-            set({ firstLaunchDate: new Date().toISOString() });
+  interface SubscriptionState extends UsageState {
+    isSubscribed: boolean;
+    isInitializing: boolean;
+    currentOfferings: PurchasesOffering | null;
+    customerInfo: CustomerInfo | null;
+    isPaywallVisible: boolean;
+  
+    // Actions
+    initialize: () => Promise<void>;
+    checkStatus: () => Promise<void>;
+    purchasePackage: (packageObject: any) => Promise<boolean>;
+    restore: () => Promise<boolean>;
+    showPaywall: () => void;
+    hidePaywall: () => void;
+    showCustomerCenter: () => Promise<void>;
+    
+    // Usage Actions
+    incrementQuoteCount: () => void;
+    checkUsageLimit: (type: 'wallpaper' | 'widget') => boolean; // Returns true if allowed, false if limited
+    checkTrialStatus: () => boolean; // Returns true if blocked by trial end
+  }
+  
+  export const useSubscriptionStore = create<SubscriptionState>()(
+    persist(
+      (set, get) => ({
+        // State
+        isSubscribed: false,
+        isInitializing: true,
+        currentOfferings: null,
+        customerInfo: null,
+        isPaywallVisible: false,
+  
+        // Usage State
+        quoteViewCount: 0,
+        dailyWallpaperSetCount: 0,
+        dailyWidgetSyncCount: 0,
+        lastActionDate: null,
+        firstLaunchDate: null,
+  
+        initialize: async () => {
+          try {
+            set({ isInitializing: true });
+            await PurchaseService.initialize();
+  
+            // Initialize launch date if first time
+            if (!get().firstLaunchDate) {
+              set({ firstLaunchDate: new Date().toISOString() });
+            }
+  
+            // Fetch initial offerings and status
+            const [offerings, status] = await Promise.all([
+              PurchaseService.fetchOfferings(),
+              PurchaseService.checkEntitlement(),
+            ]);
+  
+            const customerInfo = await Purchases.getCustomerInfo();
+  
+            set({
+              currentOfferings: offerings,
+              isSubscribed: status,
+              customerInfo,
+              isInitializing: false,
+            });
+  
+            // Listen for customer info updates
+            Purchases.addCustomerInfoUpdateListener((info) => {
+              const hasEntitlement = info.entitlements.active['I am Aura Life'] !== undefined;
+              set({ isSubscribed: hasEntitlement, customerInfo: info });
+            });
+          } catch (e) {
+            console.error('SubscriptionStore initialization error:', e);
+            set({ isInitializing: false });
           }
-
-          // Fetch initial offerings and status
-          const [offerings, status] = await Promise.all([
-            PurchaseService.fetchOfferings(),
-            PurchaseService.checkEntitlement(),
-          ]);
-
-          const customerInfo = await Purchases.getCustomerInfo();
-
-          set({
-            currentOfferings: offerings,
-            isSubscribed: status,
-            customerInfo,
-            isInitializing: false,
-          });
-
-          // Listen for customer info updates
-          Purchases.addCustomerInfoUpdateListener((info) => {
-            const hasEntitlement = info.entitlements.active['I am Aura Life'] !== undefined;
-            set({ isSubscribed: hasEntitlement, customerInfo: info });
-          });
-        } catch (e) {
-          console.error('SubscriptionStore initialization error:', e);
-          set({ isInitializing: false });
-        }
-      },
-
-      checkStatus: async () => {
-        const status = await PurchaseService.checkEntitlement();
-        const info = await Purchases.getCustomerInfo();
-        set({ isSubscribed: status, customerInfo: info });
-      },
-
-      purchasePackage: async (packageObject: any) => {
-        const success = await PurchaseService.purchase(packageObject);
-        if (success) {
-          set({ isSubscribed: true, isPaywallVisible: false });
-        }
-        return success;
-      },
-
-      restore: async () => {
-        const success = await PurchaseService.restorePurchases();
-        if (success) {
-          set({ isSubscribed: true, isPaywallVisible: false });
-        }
-        return success;
-      },
-
-      showPaywall: () => set({ isPaywallVisible: true }),
-      hidePaywall: () => set({ isPaywallVisible: false }),
-
-      showCustomerCenter: async () => {
-        await PurchaseService.showCustomerCenter();
-      },
-
-      // Usage Logic
-      incrementQuoteCount: () => {
-        const { isSubscribed, quoteViewCount } = get();
-        if (isSubscribed) return;
-
-        const newCount = quoteViewCount + 1;
-        set({ quoteViewCount: newCount });
-
-        if (newCount > 3) {
-          set({ isPaywallVisible: true });
-        }
-      },
-
-      incrementSaveCount: () => {
-        const { isSubscribed, dailySaveCount, lastSaveDate } = get();
-        if (isSubscribed) return true;
-
-        const today = new Date().toDateString();
-
-        if (lastSaveDate !== today) {
-          // Reset count for a new day
-          set({ dailySaveCount: 1, lastSaveDate: today });
-          return true;
-        }
-
-        if (dailySaveCount >= 1) {
-          set({ isPaywallVisible: true });
-          return false;
-        }
-
-        set({ dailySaveCount: dailySaveCount + 1, lastSaveDate: today });
-        return true;
-      },
+        },
+  
+        checkStatus: async () => {
+          const status = await PurchaseService.checkEntitlement();
+          const info = await Purchases.getCustomerInfo();
+          set({ isSubscribed: status, customerInfo: info });
+        },
+  
+        purchasePackage: async (packageObject: any) => {
+          const success = await PurchaseService.purchase(packageObject);
+          if (success) {
+            set({ isSubscribed: true, isPaywallVisible: false });
+          }
+          return success;
+        },
+  
+        restore: async () => {
+          const success = await PurchaseService.restorePurchases();
+          if (success) {
+            set({ isSubscribed: true, isPaywallVisible: false });
+          }
+          return success;
+        },
+  
+        showPaywall: () => set({ isPaywallVisible: true }),
+        hidePaywall: () => set({ isPaywallVisible: false }),
+  
+        showCustomerCenter: async () => {
+          await PurchaseService.showCustomerCenter();
+        },
+  
+        // Usage Logic
+        incrementQuoteCount: () => {
+          const { isSubscribed, quoteViewCount } = get();
+          if (isSubscribed) return;
+  
+          const newCount = quoteViewCount + 1;
+          set({ quoteViewCount: newCount });
+  
+          if (newCount > 3) {
+            set({ isPaywallVisible: true });
+          }
+        },
+  
+        checkUsageLimit: (type: 'wallpaper' | 'widget') => {
+          const { isSubscribed, dailyWallpaperSetCount, dailyWidgetSyncCount, lastActionDate } = get();
+          
+          console.log(`[USAGE_CHECK] Type: ${type}, Subscribed: ${isSubscribed}, Date: ${lastActionDate}`);
+          
+          if (isSubscribed) return true;
+  
+          const today = new Date().toDateString();
+          let wpCount = dailyWallpaperSetCount;
+          let wgCount = dailyWidgetSyncCount;
+  
+          if (lastActionDate !== today) {
+            console.log(`[USAGE_CHECK] New day detected (${today}). Resetting counts.`);
+            wpCount = 0;
+            wgCount = 0;
+          }
+  
+          if (type === 'wallpaper') {
+            console.log(`[USAGE_CHECK] Wallpaper count: ${wpCount}/3`);
+            if (wpCount >= 3) {
+              console.log(`[USAGE_CHECK] Limit reached. Showing paywall.`);
+              set({ isPaywallVisible: true });
+              return false;
+            }
+            set({ 
+              dailyWallpaperSetCount: wpCount + 1, 
+              lastActionDate: today,
+              dailyWidgetSyncCount: wgCount
+            });
+            return true;
+          } else {
+            console.log(`[USAGE_CHECK] Widget count: ${wgCount}/3`);
+            if (wgCount >= 3) {
+              console.log(`[USAGE_CHECK] Limit reached. Showing paywall.`);
+              set({ isPaywallVisible: true });
+              return false;
+            }
+            set({ 
+              dailyWidgetSyncCount: wgCount + 1, 
+              lastActionDate: today,
+              dailyWallpaperSetCount: wpCount
+            });
+            return true;
+          }
+        },
 
       checkTrialStatus: () => {
         const { isSubscribed, firstLaunchDate } = get();
@@ -168,8 +195,9 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         quoteViewCount: state.quoteViewCount,
-        dailySaveCount: state.dailySaveCount,
-        lastSaveDate: state.lastSaveDate,
+        dailyWallpaperSetCount: state.dailyWallpaperSetCount,
+        dailyWidgetSyncCount: state.dailyWidgetSyncCount,
+        lastActionDate: state.lastActionDate,
         firstLaunchDate: state.firstLaunchDate,
       }),
     }

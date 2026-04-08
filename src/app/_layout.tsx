@@ -87,6 +87,13 @@ export default function RootLayout() {
                     headerShown: false,
                   }}
                 />
+                <Stack.Screen
+                  name="paywall"
+                  options={{
+                    presentation: 'fullScreenModal',
+                    headerShown: false,
+                  }}
+                />
                 <Stack.Screen name="onboarding" options={{ presentation: 'fullScreenModal' }} />
               </Stack>
               <StatusBar style="auto" />

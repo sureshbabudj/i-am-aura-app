@@ -89,6 +89,7 @@ interface WallpaperState {
   loadWallpaper: (id: string) => void;
   resetCurrent: () => void;
   syncToWidget: (id?: string) => void;
+  resetAllData: () => void;
 
   // Recent items
   recentColors: string[];
@@ -185,6 +186,7 @@ export const useWallpaperStore = create<WallpaperState>()(
         }
       };
 
+
       return {
         currentWallpaper: {
           ...DEFAULT_WALLPAPER,
@@ -231,7 +233,6 @@ export const useWallpaperStore = create<WallpaperState>()(
           }
 
           set({ savedWallpapers: newSaved });
-          // Removed syncToWidget(id) - sync is now an explicit user action from the UI
           return id;
         },
 
@@ -288,7 +289,9 @@ export const useWallpaperStore = create<WallpaperState>()(
           syncToWidget();
         },
 
-        syncToWidget: (id) => syncToWidget(id),
+        syncToWidget: (id) => {
+          syncToWidget(id);
+        },
 
         loadWallpaper: (id) => {
           const { savedWallpapers } = get();
@@ -321,6 +324,25 @@ export const useWallpaperStore = create<WallpaperState>()(
             ].slice(0, 10);
             return { recentGradients: newRecent };
           });
+        },
+
+        resetAllData: () => {
+          set({
+            savedWallpapers: [],
+            dailyQueue: [],
+            currentWallpaper: {
+              ...DEFAULT_WALLPAPER,
+              backgroundValue: DEFAULT_GRADIENT,
+            },
+            recentColors: [],
+            recentGradients: [],
+          });
+
+          // Clear widget data
+          const groupId = 'group.com.sureshbabudj.iamaura';
+          const sharedKey = 'currentWallpaper';
+          AuraBridge.setSharedData(groupId, sharedKey, {});
+          AuraBridge.reloadWidget();
         },
       };
     },

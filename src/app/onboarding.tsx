@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Palette, Share, Heart, ChevronRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +7,8 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/src/stores/appStore';
 import { colors } from '@/src/constants/colors';
+import * as WebBrowser from 'expo-web-browser';
+import { settingsData } from '../constants/settings';
 
 const STEPS = [
   {
@@ -53,6 +55,18 @@ export default function OnboardingScreen() {
   };
 
   const step = STEPS[currentStep];
+
+  const handleOpenLink = async (url: string) => {
+    try {
+      await WebBrowser.openBrowserAsync(url, {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
+        toolbarColor: colors.surface,
+        enableBarCollapsing: true,
+      });
+    } catch {
+      Alert.alert('Error', 'Could not open link.');
+    }
+  };
 
   return (
     <View className="relative flex-1 overflow-hidden bg-surface">
@@ -124,8 +138,13 @@ export default function OnboardingScreen() {
         {/* Terms Disclaimer */}
         <Text className="mt-8 text-center font-manrope text-[10px] font-bold uppercase leading-relaxed tracking-widest text-on-surface/50">
           By starting, you agree to our{'\n'}
-          <Text className="text-on-surface/70 underline">Terms of Reflection</Text> &{' '}
-          <Text className="text-on-surface/70 underline">Privacy Policy</Text>
+          <Pressable onPress={() => handleOpenLink(settingsData.privacyLink)}>
+            <Text className="text-on-surface/70 underline">Terms of Conditions</Text>
+          </Pressable>{' '}
+          <Text className="text-on-surface/70">&</Text>{' '}
+          <Pressable onPress={() => handleOpenLink(settingsData.privacyLink)}>
+            <Text className="text-on-surface/70 underline">Privacy Policy</Text>
+          </Pressable>
         </Text>
       </View>
     </View>

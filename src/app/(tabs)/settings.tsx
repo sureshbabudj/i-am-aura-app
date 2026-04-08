@@ -11,6 +11,7 @@ import {
   Heart,
   ExternalLink,
   LifeBuoy,
+  NotepadText,
 } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '@/src/constants/colors';
@@ -18,11 +19,14 @@ import { settingsData } from '@/src/constants/settings';
 import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/src/stores/appStore';
+import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const featureFlags = useAppStore((state) => state.featureFlags);
+  const resetApp = useAppStore((state) => state.reset);
+  const resetWallpapers = useWallpaperStore((state) => state.resetAllData);
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -34,6 +38,25 @@ export default function SettingsScreen() {
     } catch {
       Alert.alert('Error', 'Could not open link.');
     }
+  };
+
+  const handleResetData = () => {
+    Alert.alert(
+      'Reset Data',
+      'Are you sure? This will delete all your saved wallpapers and reset all app settings. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset Everything',
+          style: 'destructive',
+          onPress: () => {
+            resetWallpapers();
+            resetApp();
+            router.replace('/onboarding');
+          },
+        },
+      ]
+    );
   };
 
   const renderSettingItem = (icon: any, label: string, value?: string, onPress?: () => void) => (
@@ -68,19 +91,15 @@ export default function SettingsScreen() {
         <ScrollView
           className="flex-1 px-6 pt-4"
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) }}>
-          {
-            <>
-              {(featureFlags.dailyReminders || featureFlags.darkTheme) && (
-                <View className="mb-8">
-                  <Text className="mb-4 ml-2 font-manrope text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/90">
-                    Preferences
-                  </Text>
-                  {featureFlags.dailyReminders && renderSettingItem(Bell, 'Daily Reminders', 'Off')}
-                  {featureFlags.darkTheme && renderSettingItem(Moon, 'App Theme', 'Dark')}
-                </View>
-              )}
-            </>
-          }
+          {(featureFlags.dailyReminders || featureFlags.darkTheme) && (
+            <View className="mb-8">
+              <Text className="mb-4 ml-2 font-manrope text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/90">
+                Preferences
+              </Text>
+              {featureFlags.dailyReminders && renderSettingItem(Bell, 'Daily Reminders', 'Off')}
+              {featureFlags.darkTheme && renderSettingItem(Moon, 'App Theme', 'Dark')}
+            </View>
+          )}
 
           <Text className="mb-4 ml-2 font-manrope text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/90">
             About & Legal
@@ -89,6 +108,9 @@ export default function SettingsScreen() {
           {renderSettingItem(Info, 'How it works', undefined, () => router.push('/onboarding'))}
           {renderSettingItem(Shield, 'Privacy Policy', undefined, () =>
             handleOpenLink(settingsData.privacyLink)
+          )}
+          {renderSettingItem(NotepadText, 'Terms of Conditions', undefined, () =>
+            handleOpenLink(settingsData.termsLink)
           )}
           {renderSettingItem(ExternalLink, 'Attributions', undefined, () =>
             router.push('/settings/attributions')
@@ -113,13 +135,7 @@ export default function SettingsScreen() {
             Danger Zone
           </Text>
           <Pressable
-            onPress={() =>
-              Alert.alert(
-                'Reset Data',
-                'Are you sure? This will delete all your saved wallpapers.',
-                [{ text: 'Cancel' }, { text: 'Reset', style: 'destructive' }]
-              )
-            }
+            onPress={handleResetData}
             className="flex-row items-center rounded-2xl border border-error/10 bg-error-container/10 p-4 active:bg-error-container/20">
             <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-error/10">
               <Trash2 size={20} color={colors.error} />
