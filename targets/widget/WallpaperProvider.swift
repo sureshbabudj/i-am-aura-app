@@ -1,23 +1,28 @@
 import WidgetKit
 import SwiftUI
 
-struct WallpaperProvider: AppIntentTimelineProvider {
+struct WallpaperProvider: TimelineProvider {
     typealias Entry = WallpaperEntry
-    typealias Intent = ConfigurationAppIntent
     
     func placeholder(in context: Context) -> WallpaperEntry {
         WallpaperEntry.sample
     }
 
-    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> WallpaperEntry {
-        let metadata = await loadCurrentMetadata() ?? .sample
-        return WallpaperEntry(date: Date(), wallpaper: metadata, configuration: configuration)
+    func getSnapshot(in context: Context, completion: @escaping (WallpaperEntry) -> Void) {
+        Task {
+            let metadata = await loadCurrentMetadata() ?? .sample
+            let entry = WallpaperEntry(date: Date(), wallpaper: metadata)
+            completion(entry)
+        }
     }
     
-    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<WallpaperEntry> {
-        let metadata = await loadCurrentMetadata() ?? .sample
-        let entry = WallpaperEntry(date: Date(), wallpaper: metadata, configuration: configuration)
-        return Timeline(entries: [entry], policy: .atEnd)
+    func getTimeline(in context: Context, completion: @escaping (Timeline<WallpaperEntry>) -> Void) {
+        Task {
+            let metadata = await loadCurrentMetadata() ?? .sample
+            let entry = WallpaperEntry(date: Date(), wallpaper: metadata)
+            let timeline = Timeline(entries: [entry], policy: .atEnd)
+            completion(timeline)
+        }
     }
 
     private func loadCurrentMetadata() async -> WallpaperMetadata? {

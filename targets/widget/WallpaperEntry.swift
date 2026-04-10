@@ -5,7 +5,6 @@ import SwiftUI
 struct WallpaperEntry: TimelineEntry {
     let date: Date
     let wallpaper: WallpaperMetadata
-    let configuration: ConfigurationAppIntent
 }
 
 struct WallpaperMetadata: Codable {
@@ -32,7 +31,6 @@ extension WallpaperMetadata {
 extension WallpaperEntry {
     static let sample = WallpaperEntry(
         date: Date(),
-        wallpaper: .sample,
-        configuration: ConfigurationAppIntent()
+        wallpaper: .sample
     )
 }

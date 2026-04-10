@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View, Alert } from 'react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
@@ -22,12 +23,18 @@ export default function PaywallScreen() {
     }
   };
 
-  // If already subscribed, just go back
-  if (isSubscribed) {
-    hidePaywall();
-    if (router.canGoBack()) {
-      router.back();
+  // If already subscribed, redirect in an effect to avoid setState during render
+  useEffect(() => {
+    if (isSubscribed) {
+      hidePaywall();
+      if (router.canGoBack()) {
+        router.back();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSubscribed]);
+
+  if (isSubscribed) {
     return null;
   }
 

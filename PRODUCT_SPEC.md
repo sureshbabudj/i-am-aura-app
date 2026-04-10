@@ -10,7 +10,7 @@
 
 ### 2. Core Feature Set
 
-- **Mood-Based Discovery**: 6 curated moods (Confident, Grateful, Peaceful, Focused, Motivational, Romantic) with uniquely weighted quote libraries.
+- **Mood-Based Discovery**: 6 curated moods (Confident, Grateful, Peaceful, Focused, Motivational, Love) with uniquely weighted quote libraries.
 - **Dynamic Customizer**:
   - **Background Types**: Solid Colors, Harmonies (Gradients), Unsplash Imagery, and SVG-based Background Patterns.
   - **Typography**: Unicode text transformation (Stylized Serif, Script, etc.) and Google Font integration (Noto Serif, Inter, Manrope).

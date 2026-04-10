@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { useSubscriptionStore } from '../../stores/subscriptionStore';
-import { View } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
+import { colors } from '@/src/constants/colors';
 
 interface PaywallProviderProps {
   children: React.ReactNode;
@@ -11,7 +12,7 @@ interface PaywallProviderProps {
  * A provider that handles global paywall navigation
  */
 export const PaywallProvider: React.FC<PaywallProviderProps> = ({ children }) => {
-  const { initialize, isPaywallVisible, isSubscribed } = useSubscriptionStore();
+  const { initialize, isPaywallVisible, isSubscribed, isInitializing } = useSubscriptionStore();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -21,10 +22,24 @@ export const PaywallProvider: React.FC<PaywallProviderProps> = ({ children }) =>
 
   // Handle global paywall navigation
   useEffect(() => {
-    if (isPaywallVisible && !isSubscribed && pathname !== '/paywall') {
+    if (!isInitializing && isPaywallVisible && !isSubscribed && pathname !== '/paywall') {
       router.push('/paywall');
     }
-  }, [isPaywallVisible, isSubscribed, pathname, router]);
+  }, [isInitializing, isPaywallVisible, isSubscribed, pathname, router]);
+
+  if (isInitializing) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.surface,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return <View style={{ flex: 1 }}>{children}</View>;
 };

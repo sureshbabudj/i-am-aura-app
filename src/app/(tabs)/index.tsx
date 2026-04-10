@@ -2,10 +2,7 @@ import { View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Heart, Clover, HandFist, HeartHandshake, Focus, BicepsFlexed } from 'lucide-react-native';
-import Animated, { 
-  useAnimatedScrollHandler, 
-  useSharedValue 
-} from 'react-native-reanimated';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { MoodId } from '@/src/constants/moods';
 import { useMoodStore } from '@/src/stores/moodStore';
 import { colors } from '@/src/constants/colors';
@@ -31,7 +28,7 @@ const MOOD_UI = [
   },
   {
     id: 'romantic',
-    label: 'Romantic',
+    label: 'Love',
     icon: Heart,
     bg: 'bg-on-error-container/5',
     color: colors['on-error-container'],
@@ -113,19 +110,21 @@ export default function HomeScreen() {
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       const currentScrollY = event.contentOffset.y;
-      
+
       // If at top, always show
       if (currentScrollY <= 50) {
         headerVisible.value = true;
       } else {
         // Hide on scroll down, show on scroll up
-        if (currentScrollY > prevScrollY.value + 5) { // 5px buffer for jitter
+        if (currentScrollY > prevScrollY.value + 5) {
+          // 5px buffer for jitter
           headerVisible.value = false;
-        } else if (currentScrollY < prevScrollY.value - 10) { // 10px buffer for deliberate scroll up
+        } else if (currentScrollY < prevScrollY.value - 10) {
+          // 10px buffer for deliberate scroll up
           headerVisible.value = true;
         }
       }
-      
+
       prevScrollY.value = currentScrollY;
     },
   });
@@ -149,9 +148,9 @@ export default function HomeScreen() {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         className="flex-1 px-6"
-        contentContainerStyle={{ 
+        contentContainerStyle={{
           paddingTop: insets.top + 100, // Safe area + Header height
-          paddingBottom: 120 
+          paddingBottom: 120,
         }}
         showsVerticalScrollIndicator={false}>
         <RandomQuote />

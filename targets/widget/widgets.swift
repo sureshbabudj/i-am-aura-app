@@ -14,9 +14,8 @@ struct WallpaperWidget: Widget {
     let kind: String = "WallpaperWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(
+        StaticConfiguration(
             kind: kind,
-            intent: ConfigurationAppIntent.self,
             provider: WallpaperProvider()
         ) { entry in
             WallpaperWidgetEntryView(entry: entry)
@@ -78,10 +77,8 @@ struct FallbackPlaceholder: View {
     var entry: WallpaperEntry
     var body: some View {
         VStack(spacing: 8) {
-            if entry.configuration.showIcon {
-                Text(entry.wallpaper.moodEmoji)
-                    .font(.system(size: 32))
-            }
+            Text(entry.wallpaper.moodEmoji)
+                .font(.system(size: 32))
             Text("Setting up your Aura...")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.secondary)

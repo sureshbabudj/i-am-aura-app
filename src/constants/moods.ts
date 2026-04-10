@@ -29,7 +29,7 @@ export const MOODS = {
   },
   romantic: {
     id: 'romantic',
-    name: 'Romantic',
+    name: 'Love',
     emoji: '💕',
     icon: 'Heart',
     color: colors['mood-peaceful-primary'],

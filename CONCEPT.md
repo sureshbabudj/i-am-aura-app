@@ -52,7 +52,7 @@ Aura includes a large, hand‑picked library of quotes organized into:
 - **Grateful**
 - **Motivational**
 - **Peaceful**
-- **Romantic**
+- **Love**
 
 Each category is designed to help users shift into the emotional state they want to embody.
 
