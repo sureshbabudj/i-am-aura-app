@@ -4,10 +4,10 @@ import { Ban, Grid } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import Slider from '@react-native-community/slider';
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
-import { MOOD_IMAGES } from '@/src/constants/images';
 import { colors } from '@/src/constants/colors';
 
 interface ImageTabProps {
+  allImages: any[];
   onShowMore: () => void;
 }
 
@@ -35,14 +35,8 @@ const MoodImage = React.memo(
   )
 );
 
-export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
+export const ImageTab: React.FC<ImageTabProps> = ({ allImages, onShowMore }) => {
   const { currentWallpaper, updateWallpaper } = useWallpaperStore();
-
-  const allImages = React.useMemo(() => {
-    const images = MOOD_IMAGES[currentWallpaper.moodId!] || [];
-    // Seeded shuffle to keep it random but stable for the current mood
-    return [...images].sort(() => 0.5 - Math.random());
-  }, [currentWallpaper.moodId]);
 
   return (
     <View className="space-y-6 pb-32">
@@ -76,20 +70,24 @@ export const ImageTab: React.FC<ImageTabProps> = ({ onShowMore }) => {
             </Text>
           </Pressable>
 
-          {allImages.slice(0, 7).map((imgInfo) => (
-            <MoodImage
-              key={imgInfo.url}
-              url={imgInfo.url}
-              isSelected={currentWallpaper.backgroundValue === imgInfo.url}
-              onPress={() => 
-                updateWallpaper({ 
-                  backgroundType: 'image', 
-                  backgroundValue: imgInfo.url,
-                  unsplashHref: imgInfo.unsplashHref 
-                })
-              }
-            />
-          ))}
+          {allImages.slice(0, 7).map((imgInfo, i) => {
+            const imgStr = JSON.stringify(imgInfo);
+            const isSelected = currentWallpaper.backgroundValue === imgStr || currentWallpaper.backgroundValue === imgInfo.url;
+            return (
+              <MoodImage
+                key={imgInfo.id || imgInfo.url || i}
+                url={imgInfo.thumbnail || imgInfo.url}
+                isSelected={isSelected}
+                onPress={() => 
+                  updateWallpaper({ 
+                    backgroundType: 'image', 
+                    backgroundValue: imgStr,
+                    unsplashHref: imgInfo.photoSlug ? `/photos/${imgInfo.photoSlug}` : imgInfo.unsplashHref 
+                  })
+                }
+              />
+            );
+          })}
 
           <Pressable
             onPress={onShowMore}

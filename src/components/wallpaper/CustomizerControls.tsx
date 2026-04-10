@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useWallpaperStore, DEFAULT_WALLPAPER } from '@/src/stores/wallpaperStore';
 
-import { MOOD_IMAGES } from '@/src/constants/images';
-import { X } from 'lucide-react-native';
 import { colors } from '@/src/constants/colors';
+import { X } from 'lucide-react-native';
 
 import { ColorTab } from './ColorTab';
 import { ImageTab } from './ImageTab';
@@ -25,9 +24,7 @@ interface CustomizerControlsProps {
 
 const DEFAULT_GRADIENT = [colors['mood-energetic-primary'], colors['mood-energetic-secondary']];
 
-export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
-  onClose,
-}) => {
+export const CustomizerControls: React.FC<CustomizerControlsProps> = ({ onClose }) => {
   const { currentWallpaper, updateWallpaper, addRecentColor, addRecentGradient } =
     useWallpaperStore();
   const [activeTab, setActiveTab] = useState<Tab>('color');
@@ -43,7 +40,26 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
   >(null);
   const [tempHex, setTempHex] = useState('');
 
-  const allImages = MOOD_IMAGES[currentWallpaper.moodId!] || [];
+  const [allImages, setAllImages] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchImages = async () => {
+      const mood = currentWallpaper.moodId;
+      if (!mood) return;
+      try {
+        const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_API_URL}?mood=${mood}`, {
+          headers: {
+            'x-api-key': process.env.EXPO_PUBLIC_API_KEY || '',
+          },
+        });
+        const data = await response.json();
+        setAllImages(data);
+      } catch (error) {
+        console.error('Failed to fetch images:', error);
+      }
+    };
+    fetchImages();
+  }, [currentWallpaper.moodId]);
 
   const handleApplyColor = (hex: string) => {
     if (!hex.startsWith('#') || hex.length < 4) return;
@@ -127,7 +143,9 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
       {/* Scrollable Controls Container */}
       <ScrollView className="flex-1 px-6 pb-32 pt-4" showsVerticalScrollIndicator={false}>
         {activeTab === 'color' && <ColorTab onPickColor={setColorPickerTarget} />}
-        {activeTab === 'image' && <ImageTab onShowMore={() => setIsImagesModalOpen(true)} />}
+        {activeTab === 'image' && (
+          <ImageTab allImages={allImages} onShowMore={() => setIsImagesModalOpen(true)} />
+        )}
         {activeTab === 'pattern' && (
           <PatternTab
             onPickColor={setColorPickerTarget}
@@ -152,10 +170,10 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({
         visible={isImagesModalOpen}
         images={allImages}
         onSelect={(imgInfo) => {
-          updateWallpaper({ 
-            backgroundType: 'image', 
-            backgroundValue: imgInfo.url,
-            unsplashHref: imgInfo.unsplashHref 
+          updateWallpaper({
+            backgroundType: 'image',
+            backgroundValue: JSON.stringify(imgInfo),
+            unsplashHref: imgInfo.photoSlug ? `/photos/${imgInfo.photoSlug}` : imgInfo.unsplashHref,
           });
           setIsImagesModalOpen(false);
         }}

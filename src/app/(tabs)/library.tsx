@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,6 +26,55 @@ export default function LibraryScreen() {
       return matchesMood && matchesSearch;
     });
   }, [savedWallpapers, searchQuery, selectedMoodFilter]);
+
+  const [freshImages, setFreshImages] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const fetchFreshImages = async () => {
+      const imageIds = new Set<string>();
+      filteredWallpapers.forEach((wp) => {
+        if (wp.backgroundType === 'image') {
+          try {
+            const parsed = JSON.parse(wp.backgroundValue as string);
+            if (parsed.unsplashId && !freshImages[parsed.unsplashId]) {
+              imageIds.add(parsed.unsplashId);
+            }
+          } catch (e) {
+            // Silently ignore legacy strings that are just URLs
+          }
+        }
+      });
+
+      if (imageIds.size === 0) return;
+
+      try {
+        const apiUrl = process.env.EXPO_PUBLIC_BACKEND_API_URL || '';
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.EXPO_PUBLIC_API_KEY || '',
+          },
+          body: JSON.stringify({ imageIds: Array.from(imageIds) }),
+        });
+
+        const data = await response.json();
+        const newUrls: Record<string, any> = { ...freshImages };
+        if (Array.isArray(data)) {
+          data.forEach((img: any) => {
+            newUrls[img.unsplashId] = img;
+          });
+          setFreshImages(newUrls);
+        }
+      } catch (error) {
+        console.error('Failed to fetch fresh images:', error);
+      }
+    };
+
+    fetchFreshImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredWallpapers]);
 
   return (
     <View className="flex-1 bg-surface">
@@ -120,14 +169,30 @@ export default function LibraryScreen() {
           </View>
         ) : (
           <View className="flex-row flex-wrap justify-between px-6 pb-12">
-            {filteredWallpapers.map((wp) => (
-              <RenderWallpaperCard
-                key={wp.id}
-                wallpaper={wp}
-                toggleFavorite={toggleFavorite}
-                deleteWallpaper={deleteWallpaper}
-              />
-            ))}
+            {filteredWallpapers.map((wp) => {
+              const wpProps = { ...wp };
+              if (wp.backgroundType === 'image') {
+                try {
+                  const parsed = JSON.parse(wp.backgroundValue as string);
+                  if (parsed.unsplashId && freshImages[parsed.unsplashId]) {
+                    const fresh = freshImages[parsed.unsplashId];
+                    parsed.medium = fresh.medium;
+                    parsed.full = fresh.full;
+                    parsed.thumbnail = fresh.thumbnail;
+                    wpProps.backgroundValue = JSON.stringify(parsed);
+                  }
+                } catch (e) {}
+              }
+
+              return (
+                <RenderWallpaperCard
+                  key={wp.id}
+                  wallpaper={wpProps}
+                  toggleFavorite={toggleFavorite}
+                  deleteWallpaper={deleteWallpaper}
+                />
+              );
+            })}
           </View>
         )}
       </ScrollView>

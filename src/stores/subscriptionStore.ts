@@ -24,6 +24,7 @@ interface SubscriptionState extends UsageState {
   currentOfferings: PurchasesOffering | null;
   customerInfo: CustomerInfo | null;
   isPaywallVisible: boolean;
+  paywallShownReason: string | null;
 
   // Actions
   initialize: () => Promise<void>;
@@ -49,6 +50,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       currentOfferings: null,
       customerInfo: null,
       isPaywallVisible: false,
+      paywallShownReason: null,
 
       // Usage State
       quoteViewCount: 0,
@@ -102,7 +104,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       purchasePackage: async (packageObject: any) => {
         const success = await PurchaseService.purchase(packageObject);
         if (success) {
-          set({ isSubscribed: true, isPaywallVisible: false });
+          set({ isSubscribed: true, isPaywallVisible: false, paywallShownReason: null });
         }
         return success;
       },
@@ -110,13 +112,13 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       restore: async () => {
         const success = await PurchaseService.restorePurchases();
         if (success) {
-          set({ isSubscribed: true, isPaywallVisible: false });
+          set({ isSubscribed: true, isPaywallVisible: false, paywallShownReason: null });
         }
         return success;
       },
 
-      showPaywall: () => set({ isPaywallVisible: true }),
-      hidePaywall: () => set({ isPaywallVisible: false }),
+      showPaywall: () => set({ isPaywallVisible: true, paywallShownReason: 'user_initiated' }),
+      hidePaywall: () => set({ isPaywallVisible: false, paywallShownReason: null }),
 
       showCustomerCenter: async () => {
         await PurchaseService.showCustomerCenter();
@@ -133,7 +135,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         });
 
         if (newCount > FREE_LIMIT_QUOTES) {
-          set({ isPaywallVisible: true });
+          set({ isPaywallVisible: true, paywallShownReason: 'quote_limit' });
         }
       },
 
@@ -162,7 +164,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           console.log(`[USAGE_CHECK] Wallpaper count: ${wpCount}/${FREE_LIMIT_WALLPAPERS}`);
           if (wpCount >= FREE_LIMIT_WALLPAPERS) {
             console.log(`[USAGE_CHECK] Limit reached. Showing paywall.`);
-            set({ isPaywallVisible: true });
+            set({ isPaywallVisible: true, paywallShownReason: 'wallpaper_limit' });
             return false;
           }
           set({
@@ -175,7 +177,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           console.log(`[USAGE_CHECK] Widget count: ${wgCount}/${FREE_LIMIT_WIDGETS}`);
           if (wgCount >= FREE_LIMIT_WIDGETS) {
             console.log(`[USAGE_CHECK] Limit reached. Showing paywall.`);
-            set({ isPaywallVisible: true });
+            set({ isPaywallVisible: true, paywallShownReason: 'widget_limit' });
             return false;
           }
           set({
@@ -196,7 +198,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         const diffDays = (currentTime - launchTime) / (1000 * 60 * 60 * 24);
 
         if (diffDays > FREE_TRIAL_DAYS) {
-          set({ isPaywallVisible: true });
+          set({ isPaywallVisible: true, paywallShownReason: 'trial_end' });
           return true;
         }
         return false;

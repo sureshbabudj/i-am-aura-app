@@ -62,9 +62,16 @@ export const RenderWallpaperCard = ({
           <View style={StyleSheet.absoluteFill}>
             <Image
               source={{
-                uri: (wallpaper.backgroundValue as string)
-                  .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
-                  .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`),
+                uri: (() => {
+                  try {
+                    const parsed = JSON.parse(wallpaper.backgroundValue as string);
+                    return parsed.medium || parsed.full;
+                  } catch(e) {
+                    return (wallpaper.backgroundValue as string)
+                      .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
+                      .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`);
+                  }
+                })(),
               }}
               style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
               className="absolute inset-0 z-0 h-full w-full"

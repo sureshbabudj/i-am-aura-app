@@ -14,8 +14,8 @@ import {
 
 interface ImageSelectionModalProps {
   visible: boolean;
-  images: MoodImageInfo[];
-  onSelect: (img: MoodImageInfo) => void;
+  images: any[];
+  onSelect: (img: any) => void;
   onClose: () => void;
 }
 
@@ -46,16 +46,16 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
           }}>
           {images.map((imgInfo, i) => {
             const url = imgInfo.url;
-            // Swap small thumbs for regular thumbs in modal
-            const modalUrl = url
+            const modalUrl = imgInfo.medium || (url && url
               .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
-              .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`);
+              .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`));
 
-            const isSelected = currentWallpaper.backgroundValue === url;
+            const imgStr = JSON.stringify(imgInfo);
+            const isSelected = currentWallpaper.backgroundValue === imgStr || currentWallpaper.backgroundValue === url;
 
             return (
               <Pressable
-                key={'allimg' + i}
+                key={imgInfo.id || url || i}
                 onPress={() => onSelect(imgInfo)}
                 style={{
                   width: (Dimensions.get('window').width - 64) / 2, // 2 columns with padding

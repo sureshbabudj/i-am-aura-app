@@ -96,9 +96,15 @@ export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>(
         );
 
       case 'image':
-        const imageUrl = (backgroundValue as string)
-          .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${FULL_IMG_WIDTH}`)
-          .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${FULL_IMG_HEIGHT}`);
+        let imageUrl = '';
+        try {
+          const parsed = JSON.parse(backgroundValue as string);
+          imageUrl = parsed.full || parsed.medium || parsed.thumbnail;
+        } catch(e) {
+          imageUrl = (backgroundValue as string)
+            .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${FULL_IMG_WIDTH}`)
+            .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${FULL_IMG_HEIGHT}`);
+        }
 
         return (
           <View style={StyleSheet.absoluteFill}>
