@@ -9,6 +9,9 @@ import { MOODS, MoodId } from '@/src/constants/moods';
 import { colors } from '@/src/constants/colors';
 import { RenderWallpaperCard } from '@/src/components/wallpaper/WallpaperCard';
 
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || '';
+const API_KEY = process.env.EXPO_PUBLIC_API_KEY || '';
+
 export default function LibraryScreen() {
   const { savedWallpapers, deleteWallpaper, toggleFavorite } = useWallpaperStore();
   const router = useRouter();
@@ -48,13 +51,11 @@ export default function LibraryScreen() {
       if (imageIds.size === 0) return;
 
       try {
-        const apiUrl = process.env.EXPO_PUBLIC_BACKEND_API_URL || '';
-
-        const response = await fetch(apiUrl, {
+        const response = await fetch(`${API_URL}/images`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': process.env.EXPO_PUBLIC_API_KEY || '',
+            'x-api-key': API_KEY,
           },
           body: JSON.stringify({ imageIds: Array.from(imageIds) }),
         });

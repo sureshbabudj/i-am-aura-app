@@ -23,6 +23,8 @@ interface CustomizerControlsProps {
 }
 
 const DEFAULT_GRADIENT = [colors['mood-energetic-primary'], colors['mood-energetic-secondary']];
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL;
+const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
 
 export const CustomizerControls: React.FC<CustomizerControlsProps> = ({ onClose }) => {
   const { currentWallpaper, updateWallpaper, addRecentColor, addRecentGradient } =
@@ -55,11 +57,14 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({ onClose 
         setUserSeed(seed);
         setPage(1);
 
-        const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_API_URL}?mood=${mood}&random=true&size=30&user-seed=${seed}&page=1`, {
-          headers: {
-            'x-api-key': process.env.EXPO_PUBLIC_API_KEY || '',
-          },
-        });
+        const response = await fetch(
+          `${API_URL}/images?mood=${mood}&random=true&size=30&user-seed=${seed}&page=1`,
+          {
+            headers: {
+              'x-api-key': API_KEY || '',
+            },
+          }
+        );
         const total = response.headers.get('x-total-count');
         if (total) {
           setTotalCount(parseInt(total, 10));
@@ -80,10 +85,10 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({ onClose 
     const nextPage = page + 1;
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_API_URL}?mood=${currentWallpaper.moodId}&random=true&size=30&user-seed=${userSeed}&page=${nextPage}`,
+        `${API_URL}/images?mood=${currentWallpaper.moodId}&random=true&size=30&user-seed=${userSeed}&page=${nextPage}`,
         {
           headers: {
-            'x-api-key': process.env.EXPO_PUBLIC_API_KEY || '',
+            'x-api-key': API_KEY || '',
           },
         }
       );

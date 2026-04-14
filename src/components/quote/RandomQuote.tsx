@@ -1,15 +1,17 @@
-import { Pressable, Text, View } from 'react-native';
-import { groupedQuotes } from '@/src/constants/groupedQuotes';
+import { Pressable, Text, View, ActivityIndicator } from 'react-native';
 import { Palette } from 'lucide-react-native';
 import { colors } from '@/src/constants/colors';
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || '';
+const API_KEY = process.env.EXPO_PUBLIC_API_KEY || '';
 
 export function RandomQuote() {
-  const mood =
-    Object.keys(groupedQuotes)[Math.floor(Math.random() * Object.keys(groupedQuotes).length)];
-  const quotes = groupedQuotes[mood];
-  const { quote } = quotes[Math.floor(Math.random() * quotes.length)];
+  const [mood, setMood] = useState('');
+  const [quote, setQuote] = useState('');
 
   const router = useRouter();
 
@@ -20,6 +22,31 @@ export function RandomQuote() {
     router.push('/create/new');
   };
 
+  useEffect(() => {
+    const fetchRandomQuote = async () => {
+      const response = await fetch(
+        `${API_URL}/quotes?random=true&limit=1&size=1&user-seed=${Math.random()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': API_KEY || '',
+          },
+        }
+      );
+
+      const data = await response.json();
+      const { quote, mood } = data?.[0];
+      if (!quote || !mood) {
+        return;
+      }
+      setMood(mood);
+      setQuote(quote);
+    };
+
+    fetchRandomQuote();
+  }, []);
+
   return (
     <View className="mb-10 mt-4">
       <View className="mb-4">
@@ -28,22 +55,30 @@ export function RandomQuote() {
         </Text>
       </View>
       <View className="min-h-[300px] items-center justify-center rounded-[2rem] bg-surface-container-lowest p-8 text-center shadow">
-        <View className="relative z-10 items-center">
-          <Text className="max-w-sm text-center font-noto-serif-italic text-3xl leading-tight text-primary md:text-5xl">
-            &quot;{quote}&quot;
-          </Text>
+        {!quote ? (
+          <ActivityIndicator size="large" color={colors.primary} />
+        ) : (
+          <Animated.View 
+            entering={FadeIn.duration(600)} 
+            exiting={FadeOut.duration(400)}
+            className="relative z-10 items-center"
+          >
+            <Text className="max-w-sm text-center font-noto-serif-italic text-3xl leading-tight text-primary md:text-5xl">
+              &quot;{quote}&quot;
+            </Text>
 
-          <View className="mt-8 flex-row items-center justify-center gap-6">
-            <Pressable
-              onPress={handleSelectQuote}
-              className="flex-row items-center gap-2 rounded-full border border-outline-variant px-4 py-2 active:opacity-70 ">
-              <Palette size={18} color={colors.primary} />
-              <Text className="font-manrope text-[10px] font-semibold uppercase tracking-widest text-primary">
-                Customize
-              </Text>
-            </Pressable>
-          </View>
-        </View>
+            <View className="mt-8 flex-row items-center justify-center gap-6">
+              <Pressable
+                onPress={handleSelectQuote}
+                className="flex-row items-center gap-2 rounded-full border border-outline-variant px-4 py-2 active:opacity-70 ">
+                <Palette size={18} color={colors.primary} />
+                <Text className="font-manrope text-[10px] font-semibold uppercase tracking-widest text-primary">
+                  Customize
+                </Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        )}
       </View>
     </View>
   );
