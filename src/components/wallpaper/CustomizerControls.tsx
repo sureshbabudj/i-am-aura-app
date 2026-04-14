@@ -41,17 +41,29 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({ onClose 
   const [tempHex, setTempHex] = useState('');
 
   const [allImages, setAllImages] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [userSeed, setUserSeed] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   React.useEffect(() => {
     const fetchImages = async () => {
       const mood = currentWallpaper.moodId;
       if (!mood) return;
       try {
-        const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_API_URL}?mood=${mood}`, {
+        const seed = Math.random();
+        setUserSeed(seed);
+        setPage(1);
+
+        const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_API_URL}?mood=${mood}&random=true&size=30&user-seed=${seed}&page=1`, {
           headers: {
             'x-api-key': process.env.EXPO_PUBLIC_API_KEY || '',
           },
         });
+        const total = response.headers.get('x-total-count');
+        if (total) {
+          setTotalCount(parseInt(total, 10));
+        }
         const data = await response.json();
         setAllImages(data);
       } catch (error) {
@@ -60,6 +72,34 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({ onClose 
     };
     fetchImages();
   }, [currentWallpaper.moodId]);
+
+  const loadMoreImages = async () => {
+    if (isLoadingMore || allImages.length >= totalCount || !currentWallpaper.moodId) return;
+
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_API_URL}?mood=${currentWallpaper.moodId}&random=true&size=30&user-seed=${userSeed}&page=${nextPage}`,
+        {
+          headers: {
+            'x-api-key': process.env.EXPO_PUBLIC_API_KEY || '',
+          },
+        }
+      );
+      const total = response.headers.get('x-total-count');
+      if (total) {
+        setTotalCount(parseInt(total, 10));
+      }
+      const data = await response.json();
+      setAllImages((prev) => [...prev, ...data]);
+      setPage(nextPage);
+    } catch (error) {
+      console.error('Failed to fetch more images:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   const handleApplyColor = (hex: string) => {
     if (!hex.startsWith('#') || hex.length < 4) return;
@@ -169,6 +209,9 @@ export const CustomizerControls: React.FC<CustomizerControlsProps> = ({ onClose 
       <ImageSelectionModal
         visible={isImagesModalOpen}
         images={allImages}
+        isLoadingMore={isLoadingMore}
+        hasMore={allImages.length < totalCount}
+        onLoadMore={loadMoreImages}
         onSelect={(imgInfo) => {
           updateWallpaper({
             backgroundType: 'image',
