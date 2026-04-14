@@ -40,7 +40,8 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export default function CustomizeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { currentWallpaper, saveWallpaper, loadWallpaper, updateWallpaper, syncToWidget } = useWallpaperStore();
+  const { currentWallpaper, saveWallpaper, loadWallpaper, updateWallpaper, syncToWidget } =
+    useWallpaperStore();
   const { checkUsageLimit } = useSubscriptionStore();
   const insets = useSafeAreaInsets();
 

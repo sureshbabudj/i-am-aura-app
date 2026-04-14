@@ -1,4 +1,12 @@
-import { View, Text, Pressable, Dimensions, FlatList, ListRenderItemInfo, ViewToken } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  Dimensions,
+  FlatList,
+  ListRenderItemInfo,
+  ViewToken,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Sparkles, ChevronDown } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -28,7 +36,7 @@ export default function QuoteSelectionScreen() {
   const { createWallpaper } = useWallpaperStore();
   const { incrementQuoteCount, checkTrialStatus } = useSubscriptionStore();
   const insets = useSafeAreaInsets();
-  
+
   // Track viewed indices to avoid double counting
   const viewedIndices = useRef(new Set<number>());
 
@@ -38,23 +46,26 @@ export default function QuoteSelectionScreen() {
   const handleSelectQuote = (text: string) => {
     // Block if trial expired
     if (checkTrialStatus()) return;
-    
+
     createWallpaper(mood, text);
     router.push('/create/new');
   };
 
-  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0) {
-      const topItem = viewableItems[0];
-      if (topItem.index !== null && !viewedIndices.current.has(topItem.index)) {
-        viewedIndices.current.add(topItem.index);
-        // Only increment if it's not the first quote
-        if (topItem.index > 0) {
-          incrementQuoteCount();
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0) {
+        const topItem = viewableItems[0];
+        if (topItem.index !== null && !viewedIndices.current.has(topItem.index)) {
+          viewedIndices.current.add(topItem.index);
+          // Only increment if it's not the first quote
+          if (topItem.index > 0) {
+            incrementQuoteCount();
+          }
         }
       }
-    }
-  }, [incrementQuoteCount]);
+    },
+    [incrementQuoteCount]
+  );
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 50,

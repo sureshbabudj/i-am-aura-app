@@ -18,9 +18,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#8FA998"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sureshbabudj.iamaura",
@@ -32,9 +30,7 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
-        "com.apple.security.application-groups": [
-          "group.com.sureshbabudj.iamaura"
-        ]
+        "com.apple.security.application-groups": ["group.com.sureshbabudj.iamaura"]
       }
     },
     "android": {
@@ -43,10 +39,7 @@
         "backgroundColor": "#8FA998"
       },
       "package": "com.sureshbabudj.iamaura",
-      "permissions": [
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_EXTERNAL_STORAGE"
-      ]
+      "permissions": ["WRITE_EXTERNAL_STORAGE", "READ_EXTERNAL_STORAGE"]
     },
     "plugins": [
       "@bacons/apple-targets",

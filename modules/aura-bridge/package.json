@@ -7,7 +7,9 @@
     "name": "aura-bridge",
     "slug": "aura-bridge"
   },
-  "platforms": ["ios"],
+  "platforms": [
+    "ios"
+  ],
   "ios": {
     "modules": [
       "WidgetBridgeModule"

@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { colors, DEFAULT_GRADIENT } from '../constants/colors';
 import { MOODS, MoodId } from '../constants/moods';
-// eslint-disable-next-line import/no-unresolved
 import * as AuraBridge from 'aura-bridge';
 
 export type BackgroundType = 'color' | 'gradient' | 'image' | 'pattern';
@@ -187,7 +186,6 @@ export const useWallpaperStore = create<WallpaperState>()(
           }, 500);
         }
       };
-
 
       return {
         currentWallpaper: {

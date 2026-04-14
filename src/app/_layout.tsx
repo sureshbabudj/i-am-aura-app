@@ -47,7 +47,7 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   });
 
-  const initializeStore = useSubscriptionStore(state => state.initialize);
+  const initializeStore = useSubscriptionStore((state) => state.initialize);
 
   useEffect(() => {
     if (fontsLoaded) {

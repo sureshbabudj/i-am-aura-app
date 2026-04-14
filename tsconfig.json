@@ -4,12 +4,8 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "*"
-      ],
-      "aura-bridge": [
-        "modules/aura-bridge/src/index.ts"
-      ]
+      "@/*": ["*"],
+      "aura-bridge": ["modules/aura-bridge/src/index.ts"]
     }
   }
 }

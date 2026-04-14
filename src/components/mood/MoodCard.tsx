@@ -12,7 +12,7 @@ interface MoodCardProps {
 
 export const MoodCard: React.FC<MoodCardProps> = ({ mood, onPress, size = 'medium' }) => {
   // Dynamic icon component from Lucide
-  const IconComponent = LucideIcons[mood.icon] as any;
+  const IconComponent = (LucideIcons as any)[mood.icon];
 
   const sizeStyles = {
     small: {

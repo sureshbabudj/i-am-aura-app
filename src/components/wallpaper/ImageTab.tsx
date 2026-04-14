@@ -72,17 +72,21 @@ export const ImageTab: React.FC<ImageTabProps> = ({ allImages, onShowMore }) => 
 
           {allImages.slice(0, 7).map((imgInfo, i) => {
             const imgStr = JSON.stringify(imgInfo);
-            const isSelected = currentWallpaper.backgroundValue === imgStr || currentWallpaper.backgroundValue === imgInfo.url;
+            const isSelected =
+              currentWallpaper.backgroundValue === imgStr ||
+              currentWallpaper.backgroundValue === imgInfo.url;
             return (
               <MoodImage
                 key={imgInfo.id || imgInfo.url || i}
                 url={imgInfo.thumbnail || imgInfo.url}
                 isSelected={isSelected}
-                onPress={() => 
-                  updateWallpaper({ 
-                    backgroundType: 'image', 
+                onPress={() =>
+                  updateWallpaper({
+                    backgroundType: 'image',
                     backgroundValue: imgStr,
-                    unsplashHref: imgInfo.photoSlug ? `/photos/${imgInfo.photoSlug}` : imgInfo.unsplashHref 
+                    unsplashHref: imgInfo.photoSlug
+                      ? `/photos/${imgInfo.photoSlug}`
+                      : imgInfo.unsplashHref,
                   })
                 }
               />

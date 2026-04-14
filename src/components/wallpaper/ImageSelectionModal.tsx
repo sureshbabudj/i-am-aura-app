@@ -4,13 +4,12 @@ import { X } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { colors } from '@/src/constants/colors';
 import { useWallpaperStore } from '@/src/stores/wallpaperStore';
-import { MoodImageInfo } from '@/src/constants/images';
 import {
   THUMB_IMG_WIDTH,
   THUMB_IMG_HEIGHT,
   SMALL_THUMB_IMG_WIDTH,
   SMALL_THUMB_IMG_HEIGHT,
-} from '@/src/constants/data';
+} from '@/src/constants/images';
 
 interface ImageSelectionModalProps {
   visible: boolean;
@@ -46,12 +45,17 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
           }}>
           {images.map((imgInfo, i) => {
             const url = imgInfo.url;
-            const modalUrl = imgInfo.medium || (url && url
-              .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
-              .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`));
+            const modalUrl =
+              imgInfo.medium ||
+              (url &&
+                url
+                  .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
+                  .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`));
 
             const imgStr = JSON.stringify(imgInfo);
-            const isSelected = currentWallpaper.backgroundValue === imgStr || currentWallpaper.backgroundValue === url;
+            const isSelected =
+              currentWallpaper.backgroundValue === imgStr ||
+              currentWallpaper.backgroundValue === url;
 
             return (
               <Pressable
@@ -70,7 +74,11 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
                 }}>
                 <Image
                   source={{ uri: modalUrl }}
-                  style={{ width: '100%', height: '100%', backgroundColor: colors['surface-container-low'] }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: colors['surface-container-low'],
+                  }}
                   contentFit="cover"
                   cachePolicy="memory-disk"
                   transition={200}

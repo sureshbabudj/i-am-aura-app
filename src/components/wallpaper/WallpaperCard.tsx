@@ -13,7 +13,7 @@ import {
   THUMB_IMG_HEIGHT,
   SMALL_THUMB_IMG_WIDTH,
   SMALL_THUMB_IMG_HEIGHT,
-} from '@/src/constants/data';
+} from '@/src/constants/images';
 
 import * as Linking from 'expo-linking';
 
@@ -66,7 +66,7 @@ export const RenderWallpaperCard = ({
                   try {
                     const parsed = JSON.parse(wallpaper.backgroundValue as string);
                     return parsed.medium || parsed.full;
-                  } catch(e) {
+                  } catch (e) {
                     return (wallpaper.backgroundValue as string)
                       .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${THUMB_IMG_WIDTH}`)
                       .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${THUMB_IMG_HEIGHT}`);
@@ -78,7 +78,7 @@ export const RenderWallpaperCard = ({
               contentFit="cover"
               transition={200}
             />
-            <Pressable 
+            <Pressable
               onPress={handleOpenUnsplash}
               className="absolute bottom-4 right-4 z-10 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-md active:bg-black/50">
               <Text className="font-manrope text-[10px] font-medium text-white/90">Unsplash</Text>

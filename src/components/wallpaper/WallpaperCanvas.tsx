@@ -15,7 +15,7 @@ import {
   FULL_IMG_HEIGHT,
   SMALL_THUMB_IMG_WIDTH,
   SMALL_THUMB_IMG_HEIGHT,
-} from '@/src/constants/data';
+} from '@/src/constants/images';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -100,7 +100,7 @@ export const WallpaperCanvas = React.forwardRef<ViewShot, WallpaperCanvasProps>(
         try {
           const parsed = JSON.parse(backgroundValue as string);
           imageUrl = parsed.full || parsed.medium || parsed.thumbnail;
-        } catch(e) {
+        } catch (e) {
           imageUrl = (backgroundValue as string)
             .replace(`w_${SMALL_THUMB_IMG_WIDTH}`, `w_${FULL_IMG_WIDTH}`)
             .replace(`h_${SMALL_THUMB_IMG_HEIGHT}`, `h_${FULL_IMG_HEIGHT}`);
