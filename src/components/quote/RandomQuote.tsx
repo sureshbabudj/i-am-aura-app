@@ -58,11 +58,10 @@ export function RandomQuote() {
         {!quote ? (
           <ActivityIndicator size="large" color={colors.primary} />
         ) : (
-          <Animated.View 
-            entering={FadeIn.duration(600)} 
+          <Animated.View
+            entering={FadeIn.duration(600)}
             exiting={FadeOut.duration(400)}
-            className="relative z-10 items-center"
-          >
+            className="relative z-10 items-center">
             <Text className="max-w-sm text-center font-noto-serif-italic text-3xl leading-tight text-primary md:text-5xl">
               &quot;{quote}&quot;
             </Text>

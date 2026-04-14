@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, FlatList, Pressable, Modal, Dimensions, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  Modal,
+  Dimensions,
+  ActivityIndicator,
+} from 'react-native';
 import { X } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { colors } from '@/src/constants/colors';
@@ -32,7 +40,7 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
 }) => {
   const { currentWallpaper } = useWallpaperStore();
 
-  const renderItem = ({ item: imgInfo, index: i }: { item: any, index: number }) => {
+  const renderItem = ({ item: imgInfo, index: i }: { item: any; index: number }) => {
     const url = imgInfo.url;
     const modalUrl =
       imgInfo.medium ||
@@ -43,8 +51,7 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
 
     const imgStr = JSON.stringify(imgInfo);
     const isSelected =
-      currentWallpaper.backgroundValue === imgStr ||
-      currentWallpaper.backgroundValue === url;
+      currentWallpaper.backgroundValue === imgStr || currentWallpaper.backgroundValue === url;
 
     return (
       <Pressable
@@ -98,7 +105,7 @@ export const ImageSelectionModal: React.FC<ImageSelectionModalProps> = ({
           onEndReachedThreshold={0.5}
           ListFooterComponent={() =>
             isLoadingMore ? (
-              <View className="py-4 items-center justify-center">
+              <View className="items-center justify-center py-4">
                 <ActivityIndicator color={colors.primary} />
               </View>
             ) : null
