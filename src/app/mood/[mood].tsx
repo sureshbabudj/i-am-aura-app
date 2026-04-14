@@ -6,11 +6,12 @@ import {
   FlatList,
   ListRenderItemInfo,
   ViewToken,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Sparkles, ChevronDown } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
-import React, { useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import Animated, {
   useAnimatedStyle,
   withRepeat,
@@ -24,11 +25,14 @@ import { useWallpaperStore } from '@/src/stores/wallpaperStore';
 import { useSubscriptionStore } from '@/src/stores/subscriptionStore';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { groupedQuotes } from '@/src/constants/groupedQuotes';
 import { QuoteItem } from '@/src/types/quote';
 import { colors } from '@/src/constants/colors';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || '';
+const API_KEY = process.env.EXPO_PUBLIC_API_KEY || '';
+const PAGE_SIZE = 100;
 
 export default function QuoteSelectionScreen() {
   const { mood } = useLocalSearchParams<{ mood: MoodId }>();
@@ -83,16 +87,78 @@ export default function QuoteSelectionScreen() {
     transform: [{ translateY: bounceValue.value }],
   }));
 
-  const randomizedQuotes = useMemo(() => {
-    if (!moodConfig) return [];
+  const [quotes, setQuotes] = useState<QuoteItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [userSeed, setUserSeed] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-    const categoryQuotes = (mood ? groupedQuotes[mood] : []) || [];
-    const baseQuotes = moodConfig.quotes.map((text) => ({ quote: text }));
+  useEffect(() => {
+    if (!mood) return;
 
-    // Combine and shuffle
-    const combined = [...baseQuotes, ...categoryQuotes];
-    return combined.sort(() => Math.random() - 0.5);
-  }, [mood, moodConfig]);
+    const fetchQuotes = async () => {
+      try {
+        setIsInitialLoading(true);
+        const seed = Math.random();
+        setUserSeed(seed);
+        setPage(1);
+
+        const response = await fetch(
+          `${API_URL}/quotes?mood=${mood}&random=true&size=${PAGE_SIZE}&user-seed=${seed}&page=1`,
+          {
+            headers: {
+              'x-api-key': API_KEY || '',
+            },
+          }
+        );
+
+        const total = response.headers.get('x-total-count');
+        if (total) {
+          setTotalCount(parseInt(total, 10));
+        }
+
+        const data = await response.json();
+        setQuotes(data || []);
+      } catch (error) {
+        console.error('Failed to fetch quotes:', error);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+
+    fetchQuotes();
+  }, [mood]);
+
+  const loadMoreQuotes = async () => {
+    if (isLoadingMore || quotes.length >= totalCount || !mood) return;
+
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      const response = await fetch(
+        `${API_URL}/quotes?mood=${mood}&random=true&size=${PAGE_SIZE}&user-seed=${userSeed}&page=${nextPage}`,
+        {
+          headers: {
+            'x-api-key': API_KEY || '',
+          },
+        }
+      );
+
+      const total = response.headers.get('x-total-count');
+      if (total) {
+        setTotalCount(parseInt(total, 10));
+      }
+
+      const data = await response.json();
+      setQuotes((prev) => [...prev, ...(data || [])]);
+      setPage(nextPage);
+    } catch (error) {
+      console.error('Failed to fetch more quotes:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   if (!moodConfig) {
     return (
@@ -179,24 +245,39 @@ export default function QuoteSelectionScreen() {
         <View className="w-12" />
       </View>
 
-      <FlatList
-        data={randomizedQuotes}
-        renderItem={renderItem}
-        keyExtractor={(_, index) => index.toString()}
-        pagingEnabled
-        horizontal={false}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={SCREEN_HEIGHT}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        disableIntervalMomentum={true}
-        removeClippedSubviews={true}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        initialNumToRender={5}
-        maxToRenderPerBatch={5}
-        windowSize={10}
-      />
+      {isInitialLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color={moodConfig.color || colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={quotes}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => (item.id as string) || index.toString()}
+          pagingEnabled
+          horizontal={false}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={SCREEN_HEIGHT}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          disableIntervalMomentum={true}
+          removeClippedSubviews={true}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={10}
+          onEndReached={loadMoreQuotes}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isLoadingMore ? (
+              <View style={{ height: SCREEN_HEIGHT }} className="items-center justify-center">
+                <ActivityIndicator size="large" color={moodConfig.color || colors.primary} />
+              </View>
+            ) : null
+          }
+        />
+      )}
     </View>
   );
 }
